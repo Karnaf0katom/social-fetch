@@ -1,6 +1,6 @@
 # social-fetch
 
-**Public social search and video downloads for Linux VMs and AI agents.**
+**Find and download YouTube, Instagram, TikTok, X and Facebook videos from a Linux VM.**
 
 **Status: alpha.** Five platform routes have passed fresh VM download checks.
 Coverage is limited to the post types and delivery formats described below;
@@ -15,6 +15,35 @@ those services acquire the video and relay it to your VM. These routes need no
 personal login, browser cookies, residential proxy subscription or paid API key.
 The services receive the public source URL and remain external dependencies.
 Access can fail for an individual post or an entire service.
+
+## How the datacenter workaround works
+
+The YouTube route calls our Python HTTP adapter for **SnapYT**. It submits the
+public source URL to that service and downloads through its media relay:
+
+```text
+Your VM → social-fetch adapter → SnapYT → YouTube
+Your VM ← checked video/audio transfers ← SnapYT relay
+```
+
+This route does **not** invoke yt-dlp on your VM. SnapYT acquires the source;
+your VM receives the relayed media, avoiding the need for YouTube to accept a
+direct media-download request from the VM.
+
+Instagram uses our **SnapInsta.lc** adapter, and TikTok uses our **TikWM** adapter.
+Those services resolve public posts to media delivered by their service or an
+approved CDN. Their own internal download implementations are outside this
+project.
+
+**yt-dlp is used for X, Facebook and the unverified Reddit path.** It is an
+upstream dependency with attribution. Installing it with this package does not
+make it the YouTube acquisition route.
+
+The open-source contribution is our programmable relay adapters, public social
+discovery, resumable YouTube transfers, media verification, YouTube assembly with
+original audio, persistent jobs, JSON CLI and Python API. The external relay servers are independently operated;
+their infrastructure is not included in this repository. This is a working
+acquisition route through those services, with the scope and evidence below.
 
 ## Install
 
