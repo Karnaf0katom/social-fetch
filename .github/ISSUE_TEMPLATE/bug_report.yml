@@ -1,0 +1,24 @@
+name: Bug report
+description: Report a reproducible installation, search or download problem
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Release and environment
+      description: Include social-fetch version, Linux distribution and Python version.
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command or minimal Python example
+      description: Include the platform and a public source URL only if shareable. Remove credentials and private paths.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected and actual result
+      description: Include sanitized JSON output and doctor output. Exclude cookies, temporary delivery URLs, private media and unreviewed worker logs.
+    validations:
+      required: true

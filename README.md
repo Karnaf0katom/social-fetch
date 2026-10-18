@@ -2,6 +2,10 @@
 
 **Public social search and video downloads for Linux VMs and AI agents.**
 
+**Status: alpha.** Five platform routes have passed fresh VM download checks.
+Coverage is limited to the post types and delivery formats described below;
+external service availability is not guaranteed.
+
 Find public posts and creator accounts, download a selected video, and export a
 checked MP4. Use the JSON CLI from an agent or the small Python API from your app.
 
@@ -22,7 +26,7 @@ sudo apt-get update
 sudo apt-get install -y python3-venv ffmpeg
 python3 -m venv .venv
 . .venv/bin/activate
-python -m pip install 'git+https://github.com/Karnaf0katom/social-fetch.git@v0.1.0'
+python -m pip install 'git+https://github.com/Karnaf0katom/social-fetch.git@v0.1.1'
 social-fetch doctor
 ```
 
@@ -110,8 +114,8 @@ and checks both byte length and SHA-256 while copying.
 | Facebook | Public index | yt-dlp | Public progressive HTTPS MP4 only |
 | Reddit | Public index | yt-dlp | Extractor path present; live download not verified for this release |
 
-YouTube, Instagram, TikTok, X and Facebook have successful prior VM download
-checks. See [support and measured evidence](docs/SUPPORT.md) for dates, current
+YouTube, Instagram, TikTok, X and Facebook passed fresh VM download checks for
+the initial release. See [support and measured evidence](docs/SUPPORT.md) for dates, current
 release checks and known limits. Recognition of a URL or a successful search
 does not establish download availability.
 
@@ -135,6 +139,10 @@ python -m pip install '.[test]'
 python scripts/check_release.py
 python -m pytest -q
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the edit/test workflow and how to refresh
+the explicit source manifest after reviewing a change. CI checks both the source
+tree and the contents of the built source archive.
 
 The offline tests cover URL/identity checks, transfer completeness, original-audio
 selection, queue admission, namespaces, interrupted workers and checked export.

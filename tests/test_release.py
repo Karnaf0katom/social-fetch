@@ -8,16 +8,54 @@ import subprocess
 import sys
 import time
 
+import pytest
+
 from social_fetch import Client, __version__
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_public_source_matches_its_manifest():
+def checker():
     spec = importlib.util.spec_from_file_location('check_release', ROOT / 'scripts/check_release.py')
     check = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(check)
-    assert check.check()['version'] == __version__
+    return check
+
+
+def test_public_source_matches_its_manifest():
+    assert checker().check()['version'] == __version__
+
+
+def source_fixture(root):
+    path = root / 'src/social_fetch/__init__.py'
+    path.parent.mkdir(parents=True)
+    path.write_text('original = True\n')
+    (root / 'SOURCE-MANIFEST.json').write_text(json.dumps({
+        'schema': 'social-fetch.source/v1', 'version': __version__,
+        'files': {'src/social_fetch/__init__.py': hashlib.sha256(path.read_bytes()).hexdigest()},
+    }))
+    return path
+
+
+def test_contributor_can_refresh_a_reviewed_change_and_verify_it(tmp_path):
+    path = source_fixture(tmp_path)
+    check = checker()
+    assert check.check(tmp_path)['verified']
+    path.write_text('reviewed_change = True\n')
+    with pytest.raises(ValueError, match='Hash changed'):
+        check.check(tmp_path)
+    assert check.refresh(tmp_path)['refreshed']
+    assert check.check(tmp_path)['verified']
+
+
+def test_new_source_needs_explicit_declaration_before_refresh(tmp_path):
+    source_fixture(tmp_path)
+    new = tmp_path / 'src/social_fetch/new.py'
+    new.write_text('new_module = True\n')
+    check = checker()
+    with pytest.raises(ValueError, match='Declare new files explicitly'):
+        check.refresh(tmp_path)
+    assert check.refresh(tmp_path, add=['src/social_fetch/new.py'])['files'] == 2
 
 
 def isolated_cli(directory, *args):
