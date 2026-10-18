@@ -23,6 +23,17 @@ from social_fetch.download_jobs import DownloadJobs
     ('https://www.reddit.com/user/someone/', 'reddit', 'account'),
     ('https://www.reddit.com/r/space/comments/abc123/rocket/', 'reddit', 'video'),
     ('https://www.youtube.com/@NASA/shorts', 'youtube', 'account'),
+    ('https://bsky.app/profile/bsky.app/post/3l3vgf77uco2g', 'bluesky', 'video'),
+    ('https://bsky.app/profile/bsky.app', 'bluesky', 'account'),
+    ('https://bsky.app/profile/did:plc:z72i7hdynmk6r22z27h6tvur/post/3l3vgf77uco2g', 'bluesky', 'video'),
+    ('https://www.pinterest.com/pin/origami--664281013778109217/?utm_source=share', 'pinterest', 'video'),
+    ('https://www.twitch.tv/ea/clip/FaintLightGullWholeWheat', 'twitch', 'video'),
+    ('https://clips.twitch.tv/embed?clip=FaintLightGullWholeWheat', 'twitch', 'video'),
+    ('https://www.snapchat.com/spotlight/W7_EDlXWTBiXAEEniNoMPwAAYYWtidGhudGZpAX1TKn0JAX1TKnXJAAAAAA', 'snapchat', 'video'),
+    ('https://www.linkedin.com/posts/the-mathworks_2_what-is-mathworks-cloud-center-activity-7151241570371948544-4Gu7', 'linkedin', 'video'),
+    ('https://www.linkedin.com/feed/update/urn:li:activity:7151241570371948544/?utm_source=share', 'linkedin', 'video'),
+    ('https://mastodon.social/@Mastodon/116839714185151652', 'mastodon', 'video'),
+    ('https://mastodon.social/@Mastodon', 'mastodon', 'account'),
 ])
 def test_public_post_and_account_recognition(url, platform, kind):
     link = social_link(url)
@@ -38,7 +49,13 @@ def test_public_post_and_account_recognition(url, platform, kind):
 @pytest.mark.parametrize('url', ['http://127.0.0.1/video', 'https://instagram.com.evil.test/reel/ABCDE/',
     'https://user:password@x.com/NASA/status/12345678', 'https://www.instagram.com/accounts/login/',
     'https://shop.tiktok.com/us/k/rocket', 'https://www.facebook.com/search/', 'https://x.com/search',
-    'https://www.tiktok.com@127.0.0.1/video/12345678901', 'https://x.com:8080/NASA/status/12345678'])
+    'https://www.tiktok.com@127.0.0.1/video/12345678901', 'https://x.com:8080/NASA/status/12345678',
+    'https://www.twitch.tv/videos/1234567890', 'https://www.twitch.tv/ea',
+    'https://www.pinterest.com/ideas/origami/1234567890/', 'https://www.pinterest.com/person/board/',
+    'https://pin.it/abc12345', 'https://www.snapchat.com/add/person',
+    'https://www.linkedin.com/learning/some-course/lesson', 'https://www.linkedin.com/in/person/',
+    'https://evil.test/@user/116839714185151652',
+    'https://mastodon.social/@user@evil.test/116839714185151652'])
 def test_non_content_and_private_links_never_enable_download(url):
     assert social_link(url) is None
     with pytest.raises(ValueError): download_link(url)
@@ -78,6 +95,66 @@ def test_cross_platform_account_search_is_bounded_and_filters_other_pages():
     assert all(row['kind'] == 'account' for row in result['results'])
     assert len(result['sources']) == 6
     assert 'not-public' not in json.dumps(result)
+
+
+def test_secondary_search_is_explicit_and_does_not_expand_the_default():
+    class SecondaryIndex(Index):
+        def search(self, query, *args):
+            self.calls.append(query)
+            return SearchBatch([
+                {'url': 'https://bsky.app/profile/bsky.app/post/3l3vgf77uco2g', 'title': 'Bluesky video'},
+                {'url': 'https://www.pinterest.com/pin/664281013778109217/', 'title': 'Origami'},
+                {'url': 'https://www.pinterest.com/ideas/origami/12345/', 'title': 'Origami'},
+            ], False)
+    index = SecondaryIndex()
+    service = FootageSearch(index)
+    found = service.search('video', source='bluesky')
+    assert [row['source'] for row in found['results']] == ['Bluesky']
+    found = service.search('origami', source='pinterest')
+    assert len(found['results']) == 1 and found['results'][0]['kind'] == 'video'
+    index.calls.clear()
+    service.search('video', source='social')
+    assert len(index.calls) == 6
+    assert not any('bsky.app' in q or 'pinterest.com' in q for q in index.calls)
+
+
+def test_federated_post_keys_include_the_author_and_remain_safe_filenames():
+    first = download_link('https://bsky.app/profile/one.bsky.social/post/3l3vgf77uco2g')
+    second = download_link('https://bsky.app/profile/two.bsky.social/post/3l3vgf77uco2g')
+    assert first.identity != second.identity
+    assert first.identity.isalnum() and len(first.identity) <= 64
+
+
+def test_twitch_clip_aliases_share_identity_but_vods_are_separate_scope():
+    one = download_link('https://clips.twitch.tv/FaintLightGullWholeWheat')
+    two = download_link('https://www.twitch.tv/ea/clip/FaintLightGullWholeWheat?tt_content=share')
+    assert one.url == two.url and one.identity == two.identity
+    with pytest.raises(ValueError): download_link('https://www.twitch.tv/videos/1234567890')
+
+
+def test_exact_post_identity_is_relevant_even_when_the_index_omits_it_from_the_title():
+    from social_fetch.web_search import public_relevance
+    item = candidate({'url': 'https://www.pinterest.com/pin/664281013778109217/', 'title': 'Origami'}, provider='public')
+    assert public_relevance(item, '664281013778109217') > 0
+    assert public_relevance(item, 'https://www.pinterest.com/pin/664281013778109217/?utm_source=share') > 0
+    assert public_relevance(item, '1084663891475263837') == 0
+
+
+def test_mastodon_sample_ignores_other_accounts_private_posts_and_images(monkeypatch):
+    import social_fetch.social_download as social_download
+    def get(request, url):
+        if 'lookup?' in url: return {'id': '123456', 'acct': 'Mastodon'}
+        assert 'limit=12' in url and 'exclude_reblogs=true' in url
+        return [
+            {'url': 'https://mastodon.social/@Mastodon/116839714185151652', 'visibility': 'public', 'media_attachments': [{'type': 'gifv'}]},
+            {'url': 'https://mastodon.social/@other/116839714185151653', 'visibility': 'public', 'media_attachments': [{'type': 'video'}]},
+            {'url': 'https://mastodon.social/@Mastodon/116839714185151654', 'visibility': 'private', 'media_attachments': [{'type': 'video'}]},
+            {'url': 'https://mastodon.social/@Mastodon/116839714185151655', 'visibility': 'public', 'media_attachments': [{'type': 'image'}]},
+        ]
+    monkeypatch.setattr(social_download, 'bounded_json', get)
+    result = AccountSearch().browse('https://mastodon.social/@Mastodon', FootageSearch(Index()))
+    assert len(result['results']) == 1 and result['results'][0]['creator'] == 'mastodon'
+    assert 'latest twelve' in result['warnings'][0]
 
 
 def test_account_search_on_default_sources_routes_to_social_and_keeps_video_cache_separate():

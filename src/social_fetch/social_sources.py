@@ -4,16 +4,23 @@ Recognition is not proof that a post contains playable video. Never accepts a
 private URL, arbitrary website, login page or whole-account download request.
 """
 from dataclasses import dataclass
+import hashlib
 import re
 from urllib.parse import parse_qs, urlsplit
 
 from social_fetch.youtube_web import youtube_url
 
+DEFAULT_SOCIAL = ('youtube', 'instagram', 'tiktok', 'x', 'facebook', 'reddit')
 LABELS = {'youtube': 'YouTube', 'instagram': 'Instagram', 'tiktok': 'TikTok',
-          'x': 'X', 'facebook': 'Facebook', 'reddit': 'Reddit'}
+          'x': 'X', 'facebook': 'Facebook', 'reddit': 'Reddit', 'bluesky': 'Bluesky',
+          'pinterest': 'Pinterest', 'twitch': 'Twitch clips', 'snapchat': 'Snapchat Spotlight',
+          'linkedin': 'LinkedIn', 'mastodon': 'Mastodon (mastodon.social)'}
 DOMAINS = {'youtube': ('youtube.com', 'youtu.be'), 'instagram': ('instagram.com',),
            'tiktok': ('tiktok.com',), 'x': ('x.com', 'twitter.com'),
-           'facebook': ('facebook.com',), 'reddit': ('reddit.com',)}
+           'facebook': ('facebook.com',), 'reddit': ('reddit.com',), 'bluesky': ('bsky.app',),
+           'pinterest': ('pinterest.com',), 'twitch': ('twitch.tv', 'clips.twitch.tv'),
+           'snapchat': ('snapchat.com',), 'linkedin': ('linkedin.com',),
+           'mastodon': ('mastodon.social',)}
 
 
 @dataclass(frozen=True)
@@ -45,6 +52,55 @@ def social_link(value: str) -> SocialLink | None:
                     return SocialLink('youtube', 'https://www.youtube.com/' + account, account, 'account', account)
         if p.scheme != 'https':
             return None
+        if host == 'bsky.app':
+            match = re.fullmatch(r'/profile/(did:plc:[a-z2-7]{24}|[A-Za-z0-9][A-Za-z0-9.-]{1,251}\.[A-Za-z]{2,63})(?:/post/([a-z2-7]{13}))?', path)
+            if match:
+                handle, post = match.groups()
+                handle = handle.lower()
+                url = 'https://bsky.app/profile/' + handle
+                identity = hashlib.sha256((handle + '/' + post).encode()).hexdigest()[:32] if post else handle
+                return SocialLink('bluesky', url + ('/post/' + post if post else ''), identity,
+                                  'video' if post else 'account', handle)
+        if host == 'pinterest.com':
+            match = re.fullmatch(r'/pin/(?:[A-Za-z0-9_-]+--)?(\d{8,25})', path)
+            if match:
+                identity = match[1]
+                return SocialLink('pinterest', f'https://www.pinterest.com/pin/{identity}/', identity, 'video')
+        if host == 'snapchat.com':
+            match = re.fullmatch(r'/spotlight/([A-Za-z0-9_-]{20,150})', path)
+            if match:
+                slug = match[1]
+                identity = slug if len(slug) <= 64 else hashlib.sha256(slug.encode()).hexdigest()[:32]
+                return SocialLink('snapchat', 'https://www.snapchat.com/spotlight/' + slug, identity, 'video')
+        if host == 'linkedin.com':
+            match = re.fullmatch(r'/posts/[A-Za-z0-9_-]+-(\d{10,25})-[A-Za-z0-9_-]{4}', path)
+            feed = re.fullmatch(r'/feed/update/urn:li:activity:(\d{10,25})', path)
+            if match or feed:
+                identity = (match or feed)[1]
+                return SocialLink('linkedin', 'https://www.linkedin.com' + path + '/', identity, 'video')
+        if host == 'mastodon.social':
+            match = re.fullmatch(r'/@([A-Za-z0-9_]{1,30})(?:/(\d{5,25}))?', path)
+            if match:
+                handle, post = match.groups()
+                handle = handle.lower()
+                url = 'https://mastodon.social/@' + handle
+                identity = hashlib.sha256(('mastodon.social/' + post).encode()).hexdigest()[:32] if post else handle
+                return SocialLink('mastodon', url + ('/' + post if post else ''), identity,
+                                  'video' if post else 'account', handle)
+        if host in ('twitch.tv', 'clips.twitch.tv'):
+            slug = ''
+            handle = ''
+            if host == 'clips.twitch.tv':
+                slug = path[1:] if re.fullmatch(r'/[A-Za-z0-9_-]{5,100}', path) else ''
+                if path == '/embed' and len(q.get('clip', [])) == 1:
+                    slug = q['clip'][0]
+            else:
+                match = re.fullmatch(r'/([A-Za-z0-9_]{1,25})/clip/([A-Za-z0-9_-]{5,100})', path)
+                if match:
+                    handle, slug = match.groups()
+            if re.fullmatch(r'[A-Za-z0-9_-]{5,100}', slug) and slug.lower() not in {'embed', 'directory', 'settings', 'login'}:
+                identity = slug if len(slug) <= 64 else hashlib.sha256(slug.encode()).hexdigest()[:32]
+                return SocialLink('twitch', 'https://clips.twitch.tv/' + slug, identity, 'video', handle)
         if host in ('instagram.com', 'm.instagram.com'):
             match = re.fullmatch(r'/(?:p|reel|reels|tv)/([A-Za-z0-9_-]{5,16})', path)
             if match:
@@ -111,5 +167,5 @@ def social_link(value: str) -> SocialLink | None:
 def download_link(value: str) -> SocialLink:
     link = social_link(value)
     if link is None or link.kind != 'video':
-        raise ValueError('Use a public YouTube, Instagram, TikTok, X, Facebook or Reddit post link. Accounts are searched, not downloaded in bulk.')
+        raise ValueError('Use a supported public video post link. Accounts are searched, not downloaded in bulk.')
     return link

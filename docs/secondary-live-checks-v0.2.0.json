@@ -1,0 +1,224 @@
+{
+  "observed_at": "2026-10-18T02:01:52Z",
+  "environment": "Linux datacenter VM; no browser profile, user cookies or API keys",
+  "yt_dlp_version": "2026.08.19",
+  "samples": [
+    {
+      "platform": "bluesky",
+      "source_url": "https://bsky.app/profile/bsky.app/post/3l3vgf77uco2g",
+      "route": "Public AppView + PLC directory + Bluesky-hosted original MP4",
+      "download": "verified",
+      "fresh_data_directory": true,
+      "export_sha256_matches": true,
+      "bytes": 6688967,
+      "sha256": "f3c3fecb52a9e3d9f7c88d6510baadde425c0444f66efd624eca881661b1d862",
+      "width": 1920,
+      "height": 1080,
+      "duration": 29.737,
+      "audio": true,
+      "decode_sample_seconds": 1,
+      "discovery": {
+        "status": "verified",
+        "route": "Public indexed search",
+        "query": "Bluesky now has video",
+        "result_count": 7,
+        "urls": [
+          "https://bsky.app/profile/marksweeney.bsky.social/post/3l3vibvha352q",
+          "https://bsky.app/profile/lrmsoares.bsky.social/post/3l3voqpgkov2e",
+          "https://bsky.app/profile/maudox.bsky.social/post/3l3viwubcde2c",
+          "https://bsky.app/profile/bsky.app/post/3l3vgf77uco2g",
+          "https://bsky.app/profile/bsky.app/post/3lg5g64vptc23",
+          "https://bsky.app/profile/flintironstag.bsky.social/post/3l3viz3vgp62m",
+          "https://bsky.app/profile/did:plc:z72i7hdynmk6r22z27h6tvur/post/3mtwf7gxkwc2r"
+        ]
+      }
+    },
+    {
+      "platform": "pinterest",
+      "source_url": "https://www.pinterest.com/pin/664281013778109217/",
+      "route": "Allowlisted yt-dlp metadata + validated progressive HTTPS CDN transfer",
+      "download": "verified",
+      "fresh_data_directory": true,
+      "export_sha256_matches": true,
+      "bytes": 18403924,
+      "sha256": "4599502cb76586e25cf6b4b7383babb0254fff33717d0f0ea0c48f1536ed9a6c",
+      "width": 1080,
+      "height": 1920,
+      "duration": 57.7,
+      "audio": true,
+      "decode_sample_seconds": 1,
+      "discovery": {
+        "status": "partial",
+        "route": "Public indexed search",
+        "query": "Origami video",
+        "result_count": 1,
+        "urls": [
+          "https://www.pinterest.com/pin/739153357635919001/"
+        ],
+        "limit": "Indexed pin candidates were real, but two acquired indexed examples were image-only and failed without ready output. The separately verified native-video pin was not established by indexed discovery. Exact-pin queries encountered a public-index failure.",
+        "negative_examples": [
+          "https://www.pinterest.com/pin/739153357635919001/",
+          "https://www.pinterest.com/pin/112801165659490852/"
+        ]
+      }
+    },
+    {
+      "platform": "twitch",
+      "source_url": "https://clips.twitch.tv/FaintLightGullWholeWheat",
+      "route": "Allowlisted yt-dlp metadata + validated progressive HTTPS CDN transfer",
+      "download": "verified",
+      "fresh_data_directory": true,
+      "export_sha256_matches": true,
+      "bytes": 16299421,
+      "sha256": "4057cefed283eb3547d7d6ac5f8eed55f0443cd38270a20d8ba7fc2ed25a5b59",
+      "width": 1920,
+      "height": 1080,
+      "duration": 32.099,
+      "audio": true,
+      "decode_sample_seconds": 1,
+      "discovery": {
+        "status": "verified",
+        "route": "Public indexed search",
+        "query": "EA Play 2016",
+        "result_count": 3,
+        "urls": [
+          "https://clips.twitch.tv/FaintLightGullWholeWheat",
+          "https://clips.twitch.tv/BoringCrispyPlumageDancingBanana",
+          "https://clips.twitch.tv/CredulousPrettiestLapwingDoggo"
+        ]
+      }
+    },
+    {
+      "platform": "snapchat",
+      "source_url": "https://www.snapchat.com/spotlight/W7_EDlXWTBiXAEEniNoMPwAAYYWtidGhudGZpAX1TKn0JAX1TKnXJAAAAAA",
+      "route": "Allowlisted yt-dlp metadata + validated progressive HTTPS CDN transfer",
+      "download": "verified",
+      "fresh_data_directory": true,
+      "export_sha256_matches": true,
+      "bytes": 583697,
+      "sha256": "d404e7d75eabf2c1645ef75b4bc9f8078549615d30101f0cf1bd405959d86cdb",
+      "width": 480,
+      "height": 880,
+      "duration": 4.641995,
+      "audio": true,
+      "decode_sample_seconds": 1,
+      "discovery": {
+        "status": "verified",
+        "route": "Public indexed search",
+        "query": "Views",
+        "result_count": 3,
+        "urls": [
+          "https://www.snapchat.com/spotlight/W7_EDlXWTBiXAEEniNoMPwAAYcGlibG1qdHpxAZFNU-K3AZFNU-KlAAAAAQ",
+          "https://www.snapchat.com/spotlight/W7_EDlXWTBiXAEEniNoMPwAAYZWlyc3Rkd3hvAZXOoSAsAZXOoSAVAAAAAQ",
+          "https://www.snapchat.com/spotlight/W7_EDlXWTBiXAEEniNoMPwAAYbHlrYXptcnViAZIe_6TLAZIe_6S7AAAAAQ"
+        ]
+      }
+    },
+    {
+      "platform": "linkedin",
+      "source_url": "https://www.linkedin.com/posts/the-mathworks_2_what-is-mathworks-cloud-center-activity-7151241570371948544-4Gu7/",
+      "route": "Allowlisted yt-dlp metadata + validated progressive HTTPS CDN transfer",
+      "download": "verified",
+      "fresh_data_directory": true,
+      "export_sha256_matches": true,
+      "bytes": 5663647,
+      "sha256": "831619cfccd2256cd1281db728670004dde819d5535053c0728ce0dbfa591752",
+      "width": 1428,
+      "height": 720,
+      "duration": 161.866009,
+      "audio": true,
+      "decode_sample_seconds": 1,
+      "discovery": {
+        "status": "verified",
+        "route": "Public indexed search",
+        "query": "MathWorks Cloud Center",
+        "result_count": 3,
+        "urls": [
+          "https://www.linkedin.com/posts/the-mathworks_2_what-is-mathworks-cloud-center-activity-7280614229076762624-PQ3H/",
+          "https://www.linkedin.com/posts/the-mathworks_2_what-is-mathworks-cloud-center-activity-7151241570371948544-4Gu7/",
+          "https://www.linkedin.com/posts/brian-hamilton-6a14b15_what-is-mathworks-cloud-center-video-activity-6931942410142834688-M3r-/"
+        ]
+      }
+    },
+    {
+      "platform": "mastodon",
+      "source_url": "https://mastodon.social/@mastodon/116839714185151652",
+      "route": "Selected public mastodon.social status API + native MP4",
+      "download": "verified",
+      "fresh_data_directory": true,
+      "export_sha256_matches": true,
+      "bytes": 1287545,
+      "sha256": "a1e61bc1b63df48e61721a39515ddcd65e41b6d1bc964d69a24a747012e73364",
+      "width": 1692,
+      "height": 1484,
+      "duration": 38.85,
+      "audio": false,
+      "decode_sample_seconds": 1,
+      "discovery": {
+        "status": "verified",
+        "route": "Public indexed search",
+        "query": "video",
+        "result_count": 3,
+        "urls": [
+          "https://mastodon.social/@2k_115/117377626003618130",
+          "https://mastodon.social/@kantel/104926889365280515",
+          "https://mastodon.social/@mustafaalbazy/110605966971955600"
+        ]
+      },
+      "account_sample": {
+        "status": "verified",
+        "url": "https://mastodon.social/@mastodon",
+        "result_count": 2,
+        "urls": [
+          "https://mastodon.social/@mastodon/116839714185151652",
+          "https://mastodon.social/@mastodon/116296397062584045"
+        ],
+        "limit": "Latest twelve media posts on mastodon.social only"
+      }
+    }
+  ],
+  "release": "0.2.0 alpha",
+  "limits": "One fresh native-media download per secondary platform, not comprehensive post/format coverage. Headline-platform evidence remains from 0.1.0.",
+  "not_newly_verified": [
+    {
+      "platform": "reddit",
+      "discovery": "verified",
+      "acquisition": "unavailable",
+      "source_url": "https://www.reddit.com/r/videos/comments/6rrwyj/",
+      "reason": "Native-video post found through indexed search; old.reddit session and Reddit API rejected VM requests (403/authentication), before format selection.",
+      "resume_condition": "A working anonymous datacenter metadata/delivery route; split audio and manifests still require implementation and live proof."
+    },
+    {
+      "platform": "vimeo",
+      "discovery": "verified",
+      "acquisition": "partial",
+      "source_url": "https://vimeo.com/76979871",
+      "reason": "Installed extractor failed its macOS OAuth request (401). Anonymous player configuration was readable but offered no progressive MP4.",
+      "resume_condition": "Recheck a current public extractor route or implement and verify bounded streaming acquisition."
+    },
+    {
+      "platform": "dailymotion",
+      "discovery": "verified",
+      "acquisition": "partial",
+      "source_url": "https://www.dailymotion.com/video/x9tp9we",
+      "reason": "An older test post was removed. The indexed replacement resolved to HLS renditions only; no completed media download.",
+      "resume_condition": "Implement validated manifests/segments, size/time/segment bounds, audio checks and fresh completed acquisition."
+    },
+    {
+      "platform": "bilibili",
+      "discovery": "verified",
+      "acquisition": "unavailable",
+      "source_url": "https://www.bilibili.com/video/BV13x41117TL/",
+      "reason": "Public webpage extraction returned HTTP 412 from the VM.",
+      "resume_condition": "A currently working public datacenter route; evaluate split audio/video and region limits with fresh output."
+    },
+    {
+      "platform": "threads",
+      "discovery": "verified",
+      "acquisition": "unverified",
+      "source_url": "https://www.threads.com/@threads/post/DDut1btS3ED",
+      "reason": "Public page was readable, but no selected-post video object was established; incidental MP4 references are not acquisition proof.",
+      "resume_condition": "Bind native media to a real public post, then implement bounded transfer and verify the completed output."
+    }
+  ]
+}

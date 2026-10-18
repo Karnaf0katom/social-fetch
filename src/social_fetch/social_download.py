@@ -1,8 +1,8 @@
 """Bounded public social acquisition; media checks run separately through CPU admission.
 
-Instagram reuses SnapInsta. TikTok uses the measured TikWM public form. X,
-Facebook and Reddit attempt the installed yt-dlp's public, progressive MP4
-extractors. No cookies, browser account, config file or paid API is used.
+Instagram reuses SnapInsta; TikTok uses TikWM. Bluesky and selected Mastodon
+posts use public metadata APIs and native MP4 delivery. Other selected sources
+use attributed, allowlisted yt-dlp extraction. No user login or cookies are used.
 """
 from __future__ import annotations
 
@@ -22,6 +22,186 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 from social_fetch.social_sources import download_link
 
 MAX_BYTES = 512 * 1024**2
+PROGRESSIVE_EXTRACTORS = {'pinterest': 'Pinterest', 'twitch': 'TwitchClips',
+                        'snapchat': 'SnapchatSpotlight', 'linkedin': 'LinkedIn'}
+EXTRACTOR_FILTERS = {**PROGRESSIVE_EXTRACTORS, 'twitch': 'twitch:clips'}
+DELIVERY_HOSTS = {'pinterest': ('pinimg.com',), 'twitch': ('clips-media-assets2.twitch.tv',
+                  'assets.clips.twitchcdn.net', 'd1ndex63qxojbr.cloudfront.net'),
+                  'snapchat': ('sc-cdn.net',), 'linkedin': ('licdn.com',)}
+
+
+def delivery_url(platform, url):
+    p = urlsplit(url)
+    host = p.hostname or ''
+    if (p.scheme != 'https' or p.username or p.password or p.port or p.fragment
+            or not any(host == allowed or host.endswith('.' + allowed)
+                       for allowed in DELIVERY_HOSTS[platform])):
+        raise ValueError('Unexpected ' + platform + ' delivery host')
+    return url
+
+
+def delivery_request(platform, url):
+    class Redirects(HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            delivery_url(platform, newurl)
+            return super().redirect_request(req, fp, code, msg, headers, newurl)
+    return build_opener(Redirects()).open(Request(delivery_url(platform, url),
+        headers={'User-Agent': 'Mozilla/5.0'}), timeout=30)
+
+
+def progressive_download(link, folder):
+    """Use one attributed extractor for metadata, then validate and stream the MP4."""
+    executable = shutil.which('yt-dlp')
+    runner = [executable] if executable else [sys.executable, '-m', 'yt_dlp'] if importlib.util.find_spec('yt_dlp') else None
+    if not runner:
+        raise ValueError('Public social extraction is not installed on this server')
+    metadata = folder / 'extractor-private.json'
+    try:
+        with metadata.open('w') as output:
+            subprocess.run([*runner, '--ignore-config', '--no-playlist', '--playlist-items', '1',
+                '--use-extractors', EXTRACTOR_FILTERS[link.platform], '--skip-download',
+                '--dump-single-json', '--socket-timeout', '10', '--retries', '0', '--extractor-retries', '0',
+                '--format', 'best[ext=mp4][protocol=https]', link.url], stdout=output,
+                check=True, timeout=90, stdin=subprocess.DEVNULL)
+        if metadata.stat().st_size > 2 * 1024**2:
+            raise ValueError('Oversized extractor metadata')
+        data = json.loads(metadata.read_text())
+        expected_id = link.url.rsplit('/', 1)[1] if link.platform in {'twitch', 'snapchat'} else link.identity
+        actual_id = data.get('display_id') if link.platform == 'twitch' else data.get('id')
+        if (str(actual_id) != expected_id or data.get('_type', 'video') != 'video'
+                or data.get('extractor_key') != PROGRESSIVE_EXTRACTORS[link.platform]):
+            raise ValueError('Extractor returned another post')
+        if data.get('ext') != 'mp4' or data.get('protocol') != 'https' or data.get('vcodec') == 'none':
+            raise ValueError('The post has no progressive HTTPS MP4')
+        return progressive_transfer(lambda url: delivery_request(link.platform, url), data['url'], folder)
+    finally:
+        metadata.unlink(missing_ok=True)
+
+
+def bluesky_url(url):
+    p = urlsplit(url)
+    host = p.hostname or ''
+    if (p.scheme != 'https' or p.username or p.password or p.port or p.fragment
+            or not (host in {'public.api.bsky.app', 'plc.directory'}
+                    or re.fullmatch(r'[a-z0-9-]+\.[a-z0-9-]+\.host\.bsky\.network', host))):
+        raise ValueError('Unexpected Bluesky delivery host')
+    return url
+
+
+class BlueskyRedirects(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        bluesky_url(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def bluesky_request(url):
+    return build_opener(BlueskyRedirects()).open(Request(bluesky_url(url),
+        headers={'User-Agent': 'social-fetch/alpha'}), timeout=30)
+
+
+def bounded_json(request, url):
+    with request(url) as response:
+        raw = response.read(2 * 1024**2 + 1)
+    if len(raw) > 2 * 1024**2:
+        raise ValueError('Oversized post metadata')
+    return json.loads(raw)
+
+
+def mastodon_url(url):
+    p = urlsplit(url)
+    if (p.scheme != 'https' or p.username or p.password or p.port or p.fragment
+            or p.hostname not in {'mastodon.social', 'files.mastodon.social'}):
+        raise ValueError('Unexpected Mastodon instance or delivery host')
+    return url
+
+
+class MastodonRedirects(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        mastodon_url(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def mastodon_request(url):
+    return build_opener(MastodonRedirects()).open(Request(mastodon_url(url),
+        headers={'User-Agent': 'social-fetch/alpha'}), timeout=30)
+
+
+def mastodon_download(link, folder):
+    from social_fetch.social_sources import social_link
+    post_id = link.url.rsplit('/', 1)[1]
+    post = bounded_json(mastodon_request, 'https://mastodon.social/api/v1/statuses/' + post_id)
+    actual = social_link(post.get('url', ''))
+    if (str(post.get('id')) != post_id or not actual or actual.url != link.url
+            or post.get('visibility') not in {'public', 'unlisted'} or post.get('reblog')):
+        raise ValueError('Mastodon returned another or nonpublic post')
+    media = next((m for m in post.get('media_attachments', []) if m.get('type') in {'video', 'gifv'}), None)
+    if not media:
+        raise ValueError('The Mastodon post has no native video')
+    return progressive_transfer(mastodon_request, mastodon_url(media.get('url', '')), folder)
+
+
+def progressive_transfer(request, url, folder, *, expected_size=None):
+    """One complete HTTPS MP4, bounded even without Content-Length. No manifests."""
+    target = folder / 'raw.mp4'
+    pending = target.with_suffix('.part')
+    size, deadline = 0, time.monotonic() + 300
+    try:
+        with request(url) as response, pending.open('wb') as output:
+            if response.status != 200:
+                raise ValueError('Expected a complete MP4 response')
+            declared = response.headers.get('Content-Length')
+            declared = int(declared) if declared is not None else None
+            if declared is not None and not 1024 <= declared <= MAX_BYTES:
+                raise ValueError('Video exceeds its size bound')
+            if expected_size is not None and declared is not None and declared != expected_size:
+                raise ValueError('Incomplete MP4 transfer')
+            for chunk in iter(lambda: response.read(256 * 1024), b''):
+                size += len(chunk)
+                if size > MAX_BYTES or time.monotonic() > deadline:
+                    raise ValueError('Video exceeded its size or time bound')
+                output.write(chunk)
+        if ((declared is not None and size != declared)
+                or (expected_size is not None and size != expected_size)):
+            raise ValueError('Incomplete MP4 transfer')
+        with pending.open('rb') as handle:
+            if size < 1024 or b'ftyp' not in handle.read(128):
+                raise ValueError('Response is not an MP4')
+        pending.replace(target)
+    finally:
+        pending.unlink(missing_ok=True)
+    return target
+
+
+def bluesky_download(link, folder):
+    post_id = link.url.rsplit('/', 1)[1]
+    post = bounded_json(bluesky_request, 'https://public.api.bsky.app/xrpc/app.bsky.feed.getPostThread?' +
+                        urlencode({'uri': f'at://{link.handle}/app.bsky.feed.post/{post_id}',
+                                   'depth': 0, 'parentHeight': 0})).get('thread', {}).get('post', {})
+    author = post.get('author') or {}
+    did = author.get('did', '')
+    if (not re.fullmatch(r'did:plc:[a-z2-7]{24}', did)
+            or post.get('uri') != f'at://{did}/app.bsky.feed.post/{post_id}'
+            or link.handle not in (did, str(author.get('handle', '')).lower())):
+        raise ValueError('Bluesky returned another post')
+    embed = (post.get('record') or {}).get('embed') or {}
+    if embed.get('$type') == 'app.bsky.embed.recordWithMedia':
+        embed = embed.get('media') or {}
+    # Quoted videos and external links are not the requested author's own media.
+    video = embed.get('video') or {}
+    cid = (video.get('ref') or {}).get('$link', '')
+    size = video.get('size')
+    if (embed.get('$type') != 'app.bsky.embed.video' or video.get('mimeType') != 'video/mp4'
+            or not re.fullmatch(r'b[a-z2-7]{20,128}', cid)
+            or not isinstance(size, int) or not 1024 <= size <= MAX_BYTES):
+        raise ValueError('The Bluesky post has no bounded native MP4')
+    document = bounded_json(bluesky_request, 'https://plc.directory/' + did)
+    endpoint = next((s.get('serviceEndpoint', '') for s in document.get('service', [])
+                     if s.get('type') == 'AtprotoPersonalDataServer'), '')
+    bluesky_url(endpoint)
+    if not re.fullmatch(r'https://[a-z0-9-]+\.[a-z0-9-]+\.host\.bsky\.network', endpoint):
+        raise ValueError('Only Bluesky-hosted public storage is supported')
+    delivery = endpoint + '/xrpc/com.atproto.sync.getBlob?' + urlencode({'did': did, 'cid': cid})
+    return progressive_transfer(bluesky_request, delivery, folder, expected_size=size)
 
 
 def write_json(path, value):
@@ -122,6 +302,12 @@ def acquire(url, folder):
         (folder / receipt['file']).replace(target)
     elif link.platform == 'tiktok':
         target = tiktok_download(link, folder)
+    elif link.platform == 'bluesky':
+        target = bluesky_download(link, folder)
+    elif link.platform == 'mastodon':
+        target = mastodon_download(link, folder)
+    elif link.platform in PROGRESSIVE_EXTRACTORS:
+        target = progressive_download(link, folder)
     else:
         executable = shutil.which('yt-dlp')
         runner = [executable] if executable else [sys.executable, '-m', 'yt_dlp'] if importlib.util.find_spec('yt_dlp') else None
@@ -146,7 +332,7 @@ def acquire(url, folder):
         amplify_id = (link.platform == 'x' and identities
                       and re.fullmatch(r'[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}', identities[-1]))
         expected_id = link.identity.split('-video', 1)[0] if link.platform == 'x' else link.identity
-        if expected_id.isdigit() and (not identities or identities[-1] != expected_id) and not amplify_id:
+        if (expected_id.isdigit() or link.platform == 'reddit') and (not identities or identities[-1] != expected_id) and not amplify_id:
             raise ValueError('Extractor returned another post')
     if not target.is_file() or not 1024 <= target.stat().st_size <= MAX_BYTES:
         raise ValueError('The post did not produce a bounded MP4')

@@ -2,7 +2,7 @@
 
 **Find and download YouTube, Instagram, TikTok, X and Facebook videos from a Linux VM.**
 
-**Status: alpha.** Five platform routes have passed fresh VM download checks.
+**Status: alpha.** The five headline routes have passed fresh VM download checks.
 Coverage is limited to the post types and delivery formats described below;
 external service availability is not guaranteed.
 
@@ -35,7 +35,8 @@ Those services resolve public posts to media delivered by their service or an
 approved CDN. Their own internal download implementations are outside this
 project.
 
-**yt-dlp is used for X, Facebook and the unverified Reddit path.** It is an
+**yt-dlp is used for X, Facebook and the unverified Reddit path**, plus metadata
+extraction for four explicitly selected secondary sources below. It is an
 upstream dependency with attribution. Installing it with this package does not
 make it the YouTube acquisition route.
 
@@ -55,7 +56,7 @@ sudo apt-get update
 sudo apt-get install -y python3-venv ffmpeg
 python3 -m venv .venv
 . .venv/bin/activate
-python -m pip install 'git+https://github.com/Karnaf0katom/social-fetch.git@v0.1.1'
+python -m pip install 'git+https://github.com/Karnaf0katom/social-fetch.git@v0.2.0'
 social-fetch doctor
 ```
 
@@ -131,6 +132,8 @@ reads a bounded sample of posts. `Client.status(id)` reads a saved job and
 `Client.wait(id, timeout=900)` waits for it. API wait timeouts raise `TimeoutError`;
 download failures return the saved failed job. `Client.export` accepts ready jobs
 and checks both byte length and SHA-256 while copying.
+Failed jobs include a sanitized `failure_stage` and `error_code` when available;
+new completed social jobs also report whether the measured file contains audio.
 
 ## Platform scope
 
@@ -141,12 +144,51 @@ and checks both byte length and SHA-256 while copying.
 | TikTok | Public index | TikWM single-post API | Public video; no native feed/profile crawling |
 | X | Public index | yt-dlp, public syndication | Progressive HTTPS MP4 only |
 | Facebook | Public index | yt-dlp | Public progressive HTTPS MP4 only |
-| Reddit | Public index | yt-dlp | Extractor path present; live download not verified for this release |
+| Reddit | Public index | yt-dlp | VM acquisition blocked by access/authentication checks; not verified |
 
 YouTube, Instagram, TikTok, X and Facebook passed fresh VM download checks for
 the initial release. See [support and measured evidence](docs/SUPPORT.md) for dates, current
 release checks and known limits. Recognition of a URL or a successful search
 does not establish download availability.
+
+## Secondary options
+
+Select these explicitly with `search --source NAME` or `Client.search(source=NAME)`.
+They are not added to the default `social` search fan-out. The following five
+additions passed discovery and one fresh VM download/export check on 18 October
+2026; coverage remains narrow.
+
+| Source | Discovery | Acquisition and scope |
+| --- | --- | --- |
+| `bluesky` | Indexed posts/profiles | Native MP4 via public AppView and Bluesky-hosted PDS; custom storage and quoted/external videos excluded |
+| `twitch` | Indexed clips | Public progressive MP4 clips via yt-dlp metadata; VODs, channels and live streams excluded |
+| `snapchat` | Indexed Spotlight | Public Spotlight MP4 via yt-dlp metadata; private stories and other formats excluded |
+| `linkedin` | Indexed posts | Public post MP4 via yt-dlp metadata; LinkedIn Learning and profiles excluded |
+| `mastodon` | Indexed mastodon.social posts; bounded native account sample | Local public/unlisted native MP4 or gifv on mastodon.social only; the measured sample is silent gifv |
+
+`pinterest` is also selectable, with **verified native-video acquisition and
+partial discovery**. A fresh 57.7-second MP4 downloaded and exported successfully
+through yt-dlp metadata and the pinimg CDN. Indexed searches returned real pin
+candidates, but two selected candidates were image-only and correctly failed
+acquisition; native-video discovery is not established. Use canonical
+pinterest.com pin links; pin.it share links, boards and image-only pins are excluded.
+
+```bash
+social-fetch search 'Bluesky now has video' --source bluesky
+social-fetch search 'EA Play 2016' --source twitch
+social-fetch account 'https://mastodon.social/@Mastodon' --count 3
+```
+
+All new routes validate source identity, delivery hosts and redirects. New media
+transfers are limited to 512 MiB and a five-minute transfer deadline with socket
+timeouts; HLS/DASH-only posts are excluded. Native Mastodon account sampling
+filters the latest twelve media posts, not a complete timeline or fediverse feed.
+Indexed results are candidates: a Pinterest pin, LinkedIn post or other result
+can contain an image or text rather than video. Acquisition verifies availability.
+
+Vimeo, Dailymotion, Bilibili and Threads were evaluated but are not new download
+options. See [measured results and resume conditions](docs/SUPPORT.md) and the
+[sanitized fresh evidence](docs/secondary-live-checks-v0.2.0.json).
 
 Search uses public web/video indexes through DDGS. Coverage and freshness vary;
 empty results and rate limits are surfaced. Optional existing Brave/Serper keys

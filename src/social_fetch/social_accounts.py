@@ -29,7 +29,34 @@ class AccountSearch:
             raise SearchBusy('Account discovery is busy. Try again shortly.')
         try:
             rows, notes = [], []
-            if link.platform == 'instagram':
+            if link.platform == 'mastodon':
+                from social_fetch.social_download import bounded_json, mastodon_request
+                from urllib.parse import urlencode
+                try:
+                    account = bounded_json(mastodon_request, 'https://mastodon.social/api/v1/accounts/lookup?' + urlencode({'acct': link.handle}))
+                    if str(account.get('acct', '')).lower() != link.handle:
+                        raise ValueError('Another account was returned')
+                    identity = str(account.get('id', ''))
+                    if not identity.isdigit():
+                        raise ValueError('Invalid account identity')
+                    posts = bounded_json(mastodon_request, 'https://mastodon.social/api/v1/accounts/' + identity +
+                        '/statuses?only_media=true&exclude_reblogs=true&limit=12')
+                    for post in posts:
+                        source = social_link(post.get('url', ''))
+                        if (not source or source.kind != 'video' or source.platform != 'mastodon'
+                                or source.handle != link.handle or post.get('reblog')
+                                or post.get('visibility') not in {'public', 'unlisted'}
+                                or not any(m.get('type') in {'video', 'gifv'} for m in post.get('media_attachments', []))):
+                            continue
+                        item = candidate({'url': source.url, 'title': f'Video from @{link.handle}',
+                                          'uploader': link.handle}, provider='mastodon-public-api')
+                        if item:
+                            rows.append(item)
+                    rows = rows[:count]
+                    notes.append('Native video/gifv from the latest twelve media posts on mastodon.social; not a complete account or fediverse index.')
+                except Exception:
+                    raise SearchUnavailable('The selected public Mastodon account is unavailable.') from None
+            elif link.platform == 'instagram':
                 from social_fetch.instagram_web import discover_profile
                 try:
                     with redirect_stdout(io.StringIO()):

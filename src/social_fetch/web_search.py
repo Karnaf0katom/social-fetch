@@ -24,7 +24,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
-from social_fetch.social_sources import DOMAINS, LABELS, social_link
+from social_fetch.social_sources import DEFAULT_SOCIAL, DOMAINS, LABELS, social_link
 
 
 class SearchUnavailable(RuntimeError):
@@ -364,7 +364,13 @@ WEB_COLLECTIONS = {
     'x': ('X / Twitter', DOMAINS['x']),
     'facebook': ('Facebook Reels & videos', DOMAINS['facebook']),
     'reddit': ('Reddit posts', DOMAINS['reddit']),
-    'social': ('Social media · all platforms', tuple(domain for domains in DOMAINS.values() for domain in domains)),
+    'bluesky': ('Bluesky posts', DOMAINS['bluesky']),
+    'pinterest': ('Pinterest video pins', DOMAINS['pinterest']),
+    'twitch': ('Twitch clips', DOMAINS['twitch']),
+    'snapchat': ('Snapchat Spotlight', DOMAINS['snapchat']),
+    'linkedin': ('LinkedIn public posts', DOMAINS['linkedin']),
+    'mastodon': ('Mastodon · mastodon.social', DOMAINS['mastodon']),
+    'social': ('Social media · default platforms', tuple(domain for name in DEFAULT_SOCIAL for domain in DOMAINS[name])),
     'scenes': ('TV & movie clips', ('clip.cafe', 'getyarn.io', 'moviefone.com',
                                   'youtube.com', 'dailymotion.com')),
     'anime': ('Anime clips', ('animethemes.moe', 'youtube.com', 'dailymotion.com')),
@@ -412,6 +418,10 @@ def public_relevance(item: dict[str, Any], query: str) -> int:
     This is a title/snippet relevance hint, never verification of footage contents.
     Dedicated API indexes keep their own ranking. No semantic model or media scan.
     """
+    selected = social_link(query.strip())
+    link = social_link(item['url'])
+    if link and ((selected and selected.url == link.url) or query.strip() == link.identity):
+        return 5
     content = (item['title'] + ' ' + item['description'] + ' ' + item.get('creator', '')).casefold()
     if re.fullmatch(r'(?:gta\s*(?:6|vi)|grand theft auto\s*(?:6|vi))', query, re.I):
         return 5 if re.search(r'\b(?:gta\s*(?:6|vi)|grand theft auto\s*(?:6|vi))\b', content) else 0
@@ -657,13 +667,17 @@ class FootageSearch:
             # public requests while classifying individual video links locally.
             kinds = () if collection else ('page',) if self.index.name == 'public' else ('video', 'page')
             requests = [('Video' if kind == 'video' else 'Web', effective if kind == 'video' else effective + ' video', kind, count, ()) for kind in kinds]
-            focused = tuple(DOMAINS) if collection == 'social' else (collection,) if collection in WEB_COLLECTIONS else ('creative', 'stock') if diversify else ()
+            focused = DEFAULT_SOCIAL if collection == 'social' else (collection,) if collection in WEB_COLLECTIONS else ('creative', 'stock') if diversify else ()
             for name in focused:
                 label, domains = WEB_COLLECTIONS[name]
                 category = 'video' if self.index.name == 'public' and name in DOMAINS and intent != 'accounts' else 'page'
                 prefixes = ('tiktok.com/@',) if self.index.name == 'public' and name == 'tiktok' and category == 'page' else domains
                 if self.index.name == 'public' and name == 'instagram' and intent != 'accounts':
                     prefixes = ('instagram.com/reel/', 'instagram.com/p/')
+                if self.index.name == 'public' and intent != 'accounts':
+                    prefixes = {'pinterest': ('pinterest.com/pin/',), 'twitch': ('clips.twitch.tv',),
+                                'snapchat': ('snapchat.com/spotlight/',),
+                                'linkedin': ('linkedin.com/posts/',)}.get(name, prefixes)
                 # Public engines often ignore/garble parenthesized OR scopes.
                 # Use a single primary host there; indexed providers retain the
                 # full multi-host scope. Result host checks remain authoritative.

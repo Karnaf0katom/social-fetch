@@ -4,7 +4,8 @@ from pathlib import Path
 from types import SimpleNamespace
 import pytest
 
-from social_fetch.social_download import acquire, finalize, tikwm_url, tiktok_download
+from social_fetch.social_download import (acquire, finalize, tikwm_url, tiktok_download,
+                                    bluesky_url, progressive_transfer)
 from social_fetch.social_sources import download_link
 
 
@@ -51,6 +52,120 @@ def test_delivery_redirects_cannot_escape_owned_provider_hosts(url):
     with pytest.raises(ValueError): tikwm_url(url)
 
 
+@pytest.mark.parametrize('url', ['https://puffball.us-east.host.bsky.network.evil.test/file',
+    'https://127.0.0.1/file', 'https://user:secret@puffball.us-east.host.bsky.network/file',
+    'http://puffball.us-east.host.bsky.network/file', 'https://example.org/xrpc/com.atproto.sync.getBlob'])
+def test_bluesky_delivery_rejects_custom_storage_and_spoofed_hosts(url):
+    with pytest.raises(ValueError): bluesky_url(url)
+
+
+def bluesky_fixture():
+    did = 'did:plc:z72i7hdynmk6r22z27h6tvur'
+    video = b'0000ftyp' + b'x' * 2048
+    post = {'uri': f'at://{did}/app.bsky.feed.post/3l3vgf77uco2g',
+            'author': {'did': did, 'handle': 'bsky.app'}, 'record': {'embed': {
+                '$type': 'app.bsky.embed.video', 'video': {'mimeType': 'video/mp4',
+                'size': len(video), 'ref': {'$link': 'bafkreih7qpo7ef7hhtm7ehi7paimlieddrn5argpq4eayz6teez2qbsr7m'}}}}}
+    return post, video
+
+
+@pytest.mark.parametrize('failure', ['identity', 'quote', 'external_storage', 'truncated', None])
+def test_bluesky_native_video_is_bound_to_post_and_complete_blob(tmp_path, monkeypatch, failure):
+    from social_fetch.social_download import bluesky_download
+    post, video = bluesky_fixture()
+    if failure == 'identity': post['author']['handle'] = 'other.bsky.social'
+    if failure == 'quote':
+        post['record']['embed'] = {'$type': 'app.bsky.embed.record', 'record': post['record']['embed']}
+    endpoint = 'https://example.org' if failure == 'external_storage' else 'https://puffball.us-east.host.bsky.network'
+    calls = []
+    def request(url):
+        calls.append(url)
+        if 'getPostThread' in url: return Response(json.dumps({'thread': {'post': post}}).encode())
+        if 'plc.directory' in url:
+            return Response(json.dumps({'service': [{'type': 'AtprotoPersonalDataServer', 'serviceEndpoint': endpoint}]}).encode())
+        return Response(video[:-1] if failure == 'truncated' else video)
+    monkeypatch.setattr('social_fetch.social_download.bluesky_request', request)
+    link = download_link('https://bsky.app/profile/bsky.app/post/3l3vgf77uco2g')
+    if failure:
+        with pytest.raises(ValueError): bluesky_download(link, tmp_path)
+        assert not (tmp_path / 'raw.mp4').exists() and not (tmp_path / 'raw.part').exists()
+        assert not any('example.org' in url for url in calls)
+    else:
+        acquire(link.url, tmp_path)
+        receipt = json.loads((tmp_path / 'acquisition.json').read_text())
+        assert receipt['bytes'] == len(video) and receipt['platform'] == 'bluesky'
+        assert 'getBlob' not in json.dumps(receipt)
+
+
+def test_progressive_video_bound_is_enforced_without_content_length(tmp_path, monkeypatch):
+    response = Response(b'0000ftyp' + b'x' * 2048)
+    response.headers.clear()
+    monkeypatch.setattr('social_fetch.social_download.MAX_BYTES', 1024)
+    with pytest.raises(ValueError, match='size or time'):
+        progressive_transfer(lambda _: response, 'https://v1.pinimg.com/file', tmp_path)
+    assert not (tmp_path / 'raw.mp4').exists() and not (tmp_path / 'raw.part').exists()
+
+
+@pytest.mark.parametrize('failure', ['identity', 'manifest', 'host', None])
+def test_secondary_extractor_cannot_cross_posts_or_escape_progressive_cdn(tmp_path, monkeypatch, failure):
+    from social_fetch.social_download import delivery_url
+    monkeypatch.setattr('social_fetch.social_download.shutil.which', lambda _: '/usr/bin/yt-dlp')
+    video = b'0000ftyp' + b'x' * 2048
+    def run(command, **kwargs):
+        assert command[command.index('--use-extractors') + 1] == 'Pinterest'
+        data = {'id': '664281013778109217' if failure != 'identity' else '664281013778109218',
+                'extractor_key': 'Pinterest', 'ext': 'mp4',
+                'protocol': 'm3u8_native' if failure == 'manifest' else 'https',
+                'url': 'https://127.0.0.1/file' if failure == 'host' else 'https://v1.pinimg.com/file.mp4'}
+        kwargs['stdout'].write(json.dumps(data))
+    monkeypatch.setattr('social_fetch.social_download.subprocess.run', run)
+    def request(platform, url):
+        delivery_url(platform, url)
+        return Response(video)
+    monkeypatch.setattr('social_fetch.social_download.delivery_request', request)
+    if failure:
+        with pytest.raises(ValueError): acquire('https://www.pinterest.com/pin/664281013778109217/', tmp_path)
+        assert not (tmp_path / 'acquisition.json').exists()
+    else:
+        acquire('https://www.pinterest.com/pin/664281013778109217/', tmp_path)
+        assert (tmp_path / 'raw.mp4').read_bytes() == video
+    assert not (tmp_path / 'extractor-private.json').exists()
+
+
+@pytest.mark.parametrize('failure', ['private', 'identity', 'image', 'host', None])
+def test_mastodon_accepts_only_the_selected_public_native_attachment(tmp_path, monkeypatch, failure):
+    from social_fetch.social_download import mastodon_url
+    url = 'https://mastodon.social/@mastodon/116839714185151652'
+    video = b'0000ftyp' + b'x' * 2048
+    post = {'id': '116839714185151652', 'url': url, 'visibility': 'public',
+            'media_attachments': [{'type': 'gifv', 'url': 'https://files.mastodon.social/file.mp4'}]}
+    if failure == 'private': post['visibility'] = 'private'
+    if failure == 'identity': post['url'] = url.replace('@mastodon', '@other')
+    if failure == 'image': post['media_attachments'][0]['type'] = 'image'
+    if failure == 'host': post['media_attachments'][0]['url'] = 'https://127.0.0.1/file.mp4'
+    def request(url):
+        mastodon_url(url)
+        return Response(json.dumps(post).encode()) if '/api/v1/' in url else Response(video)
+    monkeypatch.setattr('social_fetch.social_download.mastodon_request', request)
+    if failure:
+        with pytest.raises(ValueError): acquire(url, tmp_path)
+        assert not (tmp_path / 'acquisition.json').exists()
+    else:
+        acquire(url, tmp_path)
+        assert (tmp_path / 'raw.mp4').read_bytes() == video
+
+
+@pytest.mark.parametrize('platform,url', [
+    ('pinterest', 'https://v1.pinimg.com.evil.test/file.mp4'),
+    ('twitch', 'https://arbitrary.cloudfront.net/file.mp4'),
+    ('snapchat', 'https://sc-cdn.net.evil.test/file.mp4'),
+    ('linkedin', 'https://user:password@dms.licdn.com/file.mp4'),
+])
+def test_secondary_redirects_validate_each_destination(platform, url):
+    from social_fetch.social_download import delivery_request
+    with pytest.raises(ValueError): delivery_request(platform, url)
+
+
 def test_generic_extraction_is_one_post_with_no_implicit_browser_or_host_config(tmp_path, monkeypatch):
     commands = []
     monkeypatch.setattr('social_fetch.social_download.shutil.which', lambda _: '/usr/bin/yt-dlp')
@@ -91,6 +206,17 @@ def test_specific_x_video_keeps_the_selector_and_checks_the_parent_post(tmp_path
     monkeypatch.setattr('social_fetch.social_download.subprocess.run', run)
     acquire('https://x.com/NASA/status/12345678/video/2', tmp_path)
     assert json.loads((tmp_path / 'acquisition.json').read_text())['source_url'].endswith('/video/2')
+
+
+def test_reddit_alphanumeric_post_identity_must_match_before_receipting(tmp_path, monkeypatch):
+    monkeypatch.setattr('social_fetch.social_download.shutil.which', lambda _: '/usr/bin/yt-dlp')
+    def run(command, **kwargs):
+        (tmp_path / 'raw.mp4').write_bytes(b'ftyp' + b'x' * 1024)
+        (tmp_path / 'extracted-id.txt').write_text('anotherpost\n')
+    monkeypatch.setattr('social_fetch.social_download.subprocess.run', run)
+    with pytest.raises(ValueError, match='another post'):
+        acquire('https://www.reddit.com/r/videos/comments/6rrwyj/', tmp_path)
+    assert not (tmp_path / 'acquisition.json').exists()
 
 
 def test_unreceipted_file_from_a_failed_attempt_cannot_be_relabelled_as_another_source(tmp_path, monkeypatch):

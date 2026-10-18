@@ -12,9 +12,10 @@ import time
 
 from social_fetch.download_jobs import DownloadJobs, PENDING
 from social_fetch.social_accounts import account_search
+from social_fetch.social_sources import DOMAINS
 from social_fetch.web_search import FootageSearch
 
-SOURCES = ('social', 'youtube', 'instagram', 'tiktok', 'x', 'facebook', 'reddit')
+SOURCES = ('social', *DOMAINS)
 
 
 def data_directory():

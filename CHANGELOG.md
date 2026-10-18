@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.2.0 alpha — 2026-10-18
+
+- Add explicitly selected secondary sources: Bluesky, Pinterest video pins,
+  Twitch clips, Snapchat Spotlight, public LinkedIn posts and mastodon.social.
+  The default social search scope and five headline routes are unchanged.
+- Use public native MP4 APIs for Bluesky and mastodon.social; use attributed
+  yt-dlp metadata plus validated, bounded HTTPS CDN transfers for the other four.
+- Add a bounded mastodon.social account sample, post/author identity checks,
+  per-platform delivery/redirect allowlists and incomplete-transfer regressions.
+- Expose sanitized failure stages/codes and measured audio presence on new jobs.
+- Record six fresh downloads with decoded samples and matching export hashes.
+  Five additions also passed useful discovery; Pinterest discovery remains
+  partial (image-only indexed candidates). The Mastodon sample is silent gifv.
+- Keep exact selected-post URLs/identities relevant when an index omits the ID
+  from its title, and require alphanumeric Reddit post identities to match.
+- Record Reddit, Vimeo, Dailymotion, Bilibili and Threads limitations separately;
+  they are not newly verified acquisition options.
+
 ## 0.1.1 — 2026-10-18
 
 - Include the manifest's dotfiles in the source archive and verify the built

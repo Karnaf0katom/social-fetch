@@ -87,8 +87,27 @@ def test_worker_failure_is_not_reported_as_delivery_and_retry_is_explicit(tmp_pa
     service.work(service.folder('ours', job['id']))
     result = service.get('ours', job['id'])
     assert result['status'] == 'failed' and 'secret-service-token' not in json.dumps(result)
+    assert result['failure_stage'] == 'acquisition' and result['error_code'] == 'acquisition_failed'
     service.submit('ours', URL)
     assert len(calls) == 2
+
+
+@pytest.mark.parametrize('failure', ['timeout', 'assembly', 'verification'])
+def test_worker_failures_identify_the_stage_without_exposing_subprocess_output(tmp_path, monkeypatch, failure):
+    import subprocess
+    service, _ = prepared(tmp_path, monkeypatch)
+    job = service.submit('ours', URL)
+    def run(command, **kwargs):
+        if failure == 'timeout': raise subprocess.TimeoutExpired('secret-service-url', 1)
+        return SimpleNamespace(returncode=1 if failure == 'assembly' and '--finalize-only' in command else 0,
+                               stderr='secret-service-token', stdout='')
+    monkeypatch.setattr('social_fetch.download_jobs.subprocess.run', run)
+    service.work(service.folder('ours', job['id']))
+    result = service.get('ours', job['id'])
+    assert result['status'] == 'failed'
+    assert result['failure_stage'] == {'timeout': 'acquisition', 'assembly': 'assembly', 'verification': 'verification'}[failure]
+    assert result['error_code'] == ('timeout' if failure == 'timeout' else failure + '_failed')
+    assert 'secret-service' not in json.dumps(result)
 
 
 def test_pending_cpu_wait_never_becomes_failure_or_resubmits_assembly(tmp_path, monkeypatch):

@@ -6,7 +6,12 @@ external services or downloaded media.
 - [DDGS](https://github.com/deedy5/ddgs) provides public index lookups and is
   installed as a Python dependency. Its dependencies keep their upstream licenses.
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp) provides the allowlisted X, Facebook
-  and Reddit extractors and is installed separately as a dependency.
+  and Reddit extraction paths, and metadata extraction for Pinterest, Twitch
+  clips, Snapchat Spotlight and public LinkedIn posts. It is an attributed
+  dependency; the four secondary routes validate and stream the selected MP4
+  through our own bounded HTTP transfer. It is not used for our YouTube route.
+- [Bluesky](https://docs.bsky.app/) and [Mastodon](https://docs.joinmastodon.org/)
+  publish the public metadata/blob APIs used by their scoped native MP4 adapters.
 - [FFmpeg](https://ffmpeg.org/legal.html) and ffprobe are system dependencies.
   Their license depends on the build installed by the user.
 - [SnapYT](https://www.snapyt.app/), [SnapInsta.lc](https://snapinsta.lc/) and

@@ -67,7 +67,8 @@ class DownloadJobs:
         elif job['status'] in ACTIVE and time.time() - job['updated_at'] > 30:
             dead = True
         if dead:
-            job.update(status='failed', message='Download was interrupted. Try again to resume.', updated_at=time.time())
+            job.update(status='failed', error_code='interrupted', failure_stage='worker',
+                       message='Download was interrupted. Try again to resume.', updated_at=time.time())
             save(folder / 'job.json', job)
         if job['status'] == 'ready':
             final = folder / (job['video_id'] + '.mp4')
@@ -85,7 +86,7 @@ class DownloadJobs:
         return job
 
     def public(self, job):
-        return {k: job[k] for k in ('id', 'source_url', 'platform', 'title', 'status', 'message', 'created_at', 'updated_at', 'bytes', 'width', 'height', 'duration', 'sha256') if k in job}
+        return {k: job[k] for k in ('id', 'source_url', 'platform', 'title', 'status', 'message', 'created_at', 'updated_at', 'bytes', 'width', 'height', 'duration', 'sha256', 'audio', 'error_code', 'failure_stage') if k in job}
 
     def _jobs(self):
         rows = []
@@ -240,6 +241,7 @@ class DownloadJobs:
                 job.update(updated_at=time.time(), **values)
                 save(folder / 'job.json', job)
                 return job
+        stage = 'acquisition'
         try:
             job = update(pid=os.getpid(), message='Preparing source download')
             platform = job.get('platform', 'youtube')
@@ -250,6 +252,7 @@ class DownloadJobs:
             if not cpu_job:
                 update(status='downloading', message='Downloading original video and audio' if platform == 'youtube' else 'Downloading selected public post')
                 subprocess.run([*command, '--download-only'], cwd=VIDEO_ROOT, check=True, timeout=1800, stdin=subprocess.DEVNULL)
+                stage = 'assembly'
                 update(status='assembling', message='Waiting for video assembly and media checks')
                 # This checkout must use its shared CPU owner. An independent
                 # installation has no private .agent dependency; its two-worker
@@ -264,6 +267,7 @@ class DownloadJobs:
                     cpu_job = match[1]
                     update(cpu_job_id=cpu_job)
             if cpu_job:
+                stage = 'assembly'
                 update(status='assembling', message='Waiting for video assembly and media checks')
                 while True:
                     result = subprocess.run([str(CPU_SLOT), 'wait', cpu_job, '--timeout-seconds', '60'],
@@ -272,15 +276,19 @@ class DownloadJobs:
                         break
             if result.returncode:
                 raise RuntimeError('Video assembly failed')
+            stage = 'verification'
             receipt = json.loads((folder / (job['video_id'] + '.receipt.json')).read_text())
             final = folder / (job['video_id'] + '.mp4')
             if (not receipt['downloaded'] or final.stat().st_size != receipt['bytes']
                     or platform != 'youtube' and receipt.get('source_url') != job['source_url']):
                 raise RuntimeError('Completed file did not pass its receipt check')
-            update(status='ready', message='MP4 ready', **{k: receipt[k] for k in ('bytes', 'height', 'duration', 'width', 'sha256') if k in receipt})
-        except Exception:
+            update(status='ready', message='MP4 ready', **{k: receipt[k] for k in ('bytes', 'height', 'duration', 'width', 'sha256', 'audio') if k in receipt})
+        except Exception as error:
             # Keep service tokens, subprocess output and host paths out of the public response.
-            update(status='failed', message='Public download or media check failed. The post may require login, be unavailable, or have no downloadable video. Open the source or retry.')
+            code = 'timeout' if isinstance(error, subprocess.TimeoutExpired) else stage + '_failed'
+            message = ('Public source acquisition failed. The post may require login, be unavailable, or have no downloadable video.'
+                       if stage == 'acquisition' else 'Video assembly or media verification failed. Reconnect to the saved job or retry the same source.')
+            update(status='failed', error_code=code, failure_stage=stage, message=message)
         finally:
             with self.lock():
                 self._dispatch()
