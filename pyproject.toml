@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "social-fetch"
+version = "0.1.0"
+description = "Public social search and video downloads for Linux VMs and AI agents"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Karnaf Katom"}]
+dependencies = ["ddgs==9.14.4", "yt-dlp>=2026.1"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Topic :: Multimedia :: Video",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<10"]
+
+[project.scripts]
+social-fetch = "social_fetch.social_cli:main"
+
+[project.urls]
+Repository = "https://github.com/Karnaf0katom/social-fetch"
+Issues = "https://github.com/Karnaf0katom/social-fetch/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

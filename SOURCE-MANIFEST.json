@@ -1,0 +1,37 @@
+{
+  "schema": "social-fetch.source/v1",
+  "version": "0.1.0",
+  "files": {
+    "src/social_fetch/client.py": "c386177b6077aaa1c1d38f75d4f6f490f14d624e44480cbd89e1c2a2856d638d",
+    "src/social_fetch/download_jobs.py": "7e3d0d882c03be5d96cc56da90dce8e5e38a028458004b74aa742ff979c4195d",
+    "src/social_fetch/social_cli.py": "34a50a91edf2aa879045ede54dbcbca5f8c59330689cc560f92ba8d268e516aa",
+    "src/social_fetch/social_sources.py": "a5283d9074cc0b7c989ee9df4b451112e72828cb8651a9254c1d72990250f039",
+    "src/social_fetch/social_accounts.py": "0e7e65f230ef1364b7c6566b5c1adcd3ef656f16e919ce9b07f2c4d15b58a6fe",
+    "src/social_fetch/social_download.py": "7f7ddef98d3620fb1c36e4dcdb1555ea55cce5278b931ea5e9d23a329c48c7fd",
+    "src/social_fetch/youtube_web.py": "2d4360915017eef463e7f582a2b9fb251efbdbdf6a904c7eb8c4569c5e17a875",
+    "src/social_fetch/instagram_web.py": "074cc0e23e12a7668ead44171d39edbad1a7a264551d5663aa1e14b334133b03",
+    "src/social_fetch/web_search.py": "39b0260fce5b838a5c8dfe82214931be7c4f8ed1119567e0d595150a787df500",
+    "tests/test_social_client.py": "5954ec456a3e12b7bc02f7cc9b4f9e1ba62b041d8d8d989860304f32bec1c63f",
+    "tests/test_social_sources.py": "19e7441483924d38c2d4ebea2a3130580fcd57a4334329729ad2d3912016df26",
+    "tests/test_social_download.py": "0a43aa17e33d136692d5deea865c2dbe82ffa31a63dc80bef3d928ac5a181716",
+    "tests/test_download_jobs.py": "f4c83fa5b163aef64be6485dadab3167ef744c792ed8be20da7f5c60befc0371",
+    "tests/test_youtube_web.py": "539f845707ae82382d959ac1a4ef7d26425039209937e1acbbf404f1f14c5c35",
+    "README.md": "c1bdbe6145c8bd15c86b46b644f88464b4778e6d395049f400b663cafee2157a",
+    "LICENSE": "99635d223f61001e8d09bfa2acb5ad0ca839e0f6edfae2b9ba6464427431e278",
+    "CHANGELOG.md": "1e5543ce4b2e7d1cd1b53231cf3ca2f52268baaa2ecc114e5b90808122b12f7c",
+    "pyproject.toml": "de58fb3f0bdbee2c5ca70aa967d67926964ed3559d326a72812a70ab276a522f",
+    "MANIFEST.in": "39e8f641a61adc44714332bd384ef5f52fc51acb2392bedc84408fc7753d3f17",
+    ".gitignore": "c062ff331f1a9fd79fa6d0cb01912e8f2ff4f5030d1f4fdc6adaaeaf0b41871f",
+    ".github/workflows/tests.yml": "55647db99b7684c66b5f2bd6bafecce87632c9024c2157af4d004efba900c02a",
+    "src/social_fetch/__init__.py": "4c770ebfd61a32a4c7d76175b2255be5055d574b12777f88a3a34048c81d8332",
+    "src/social_fetch/__main__.py": "293741967b1870faf83a74042af74b4751ebf21027d5dc7e779d129a913c88bc",
+    "tests/test_release.py": "991a599e679511efe3e7577872aa233e1ecad31bf730b73ba37ff11562c0f951",
+    "scripts/check_release.py": "73cff19ec8c4df5408ccfb3dccf912371defbd66fd1f3ec2dda270582513bd76",
+    "docs/SUPPORT.md": "29ce1dccf208f66d5deb4b5a1b541625ce3daa2ec0fbe540e8f90c6b3eefafae",
+    "docs/THIRD_PARTY.md": "9605cdae3559ef69228cb725200657b1e2b12388e81a5cbf4e69b585a4079871"
+  },
+  "adaptations": [
+    "Python package/import name",
+    "installed-module location in YouTube tests"
+  ]
+}
