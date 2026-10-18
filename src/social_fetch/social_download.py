@@ -16,16 +16,23 @@ import shutil
 import subprocess
 import sys
 import time
+from urllib.error import URLError
 from urllib.parse import urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from social_fetch.social_sources import download_link
+from social_fetch.social_fallbacks import FALLBACKS, ProviderUnavailable
 
 MAX_BYTES = 512 * 1024**2
-PROGRESSIVE_EXTRACTORS = {'pinterest': 'Pinterest', 'twitch': 'TwitchClips',
+PROGRESSIVE_EXTRACTORS = {'instagram': 'Instagram', 'tiktok': 'TikTok',
+                        'pinterest': 'Pinterest', 'twitch': 'TwitchClips',
                         'snapchat': 'SnapchatSpotlight', 'linkedin': 'LinkedIn'}
 EXTRACTOR_FILTERS = {**PROGRESSIVE_EXTRACTORS, 'twitch': 'twitch:clips'}
-DELIVERY_HOSTS = {'pinterest': ('pinimg.com',), 'twitch': ('clips-media-assets2.twitch.tv',
+DELIVERY_HOSTS = {'instagram': ('cdninstagram.com', 'fbcdn.net'),
+                  'tiktok': ('tiktokcdn.com', 'tiktokcdn-us.com', 'tiktokcdn-eu.com',
+                             'tiktokv.com', 'byteoversea.com', 'ibytedtos.com',
+                             'v19-webapp-prime.tiktok.com'),
+                  'pinterest': ('pinimg.com',), 'twitch': ('clips-media-assets2.twitch.tv',
                   'assets.clips.twitchcdn.net', 'd1ndex63qxojbr.cloudfront.net'),
                   'snapchat': ('sc-cdn.net',), 'linkedin': ('licdn.com',)}
 
@@ -54,7 +61,7 @@ def progressive_download(link, folder):
     executable = shutil.which('yt-dlp')
     runner = [executable] if executable else [sys.executable, '-m', 'yt_dlp'] if importlib.util.find_spec('yt_dlp') else None
     if not runner:
-        raise ValueError('Public social extraction is not installed on this server')
+        raise ProviderUnavailable('Public social extraction is not installed on this server')
     metadata = folder / 'extractor-private.json'
     try:
         with metadata.open('w') as output:
@@ -68,11 +75,27 @@ def progressive_download(link, folder):
         data = json.loads(metadata.read_text())
         expected_id = link.url.rsplit('/', 1)[1] if link.platform in {'twitch', 'snapchat'} else link.identity
         actual_id = data.get('display_id') if link.platform == 'twitch' else data.get('id')
+        if link.platform == 'tiktok' and not link.identity.isdigit():
+            # A short share URL has no numeric post ID until the selected extractor resolves it.
+            if not re.fullmatch(r'\d{10,25}', str(actual_id)):
+                raise ValueError('Unexpected resolved TikTok identity')
+            expected_id = str(actual_id)
+        if link.platform == 'instagram' and data.get('_type') == 'playlist':
+            if str(actual_id) != expected_id or data.get('extractor_key') != 'Instagram':
+                raise ValueError('Extractor returned another post')
+            entries = data.get('entries') or []
+            if len(entries) > 20:
+                raise ValueError('Oversized Instagram carousel')
+            data = next((e for e in entries if isinstance(e, dict) and e.get('ext') == 'mp4'
+                         and e.get('protocol') == 'https' and e.get('vcodec') != 'none'), {})
+            if not data:
+                raise ProviderUnavailable('The Instagram post has no progressive video')
+            actual_id = expected_id  # Bound above by the selected parent post, not the child media ID.
         if (str(actual_id) != expected_id or data.get('_type', 'video') != 'video'
                 or data.get('extractor_key') != PROGRESSIVE_EXTRACTORS[link.platform]):
             raise ValueError('Extractor returned another post')
         if data.get('ext') != 'mp4' or data.get('protocol') != 'https' or data.get('vcodec') == 'none':
-            raise ValueError('The post has no progressive HTTPS MP4')
+            raise ProviderUnavailable('The post has no progressive HTTPS MP4')
         return progressive_transfer(lambda url: delivery_request(link.platform, url), data['url'], folder)
     finally:
         metadata.unlink(missing_ok=True)
@@ -154,7 +177,7 @@ def progressive_transfer(request, url, folder, *, expected_size=None):
             if declared is not None and not 1024 <= declared <= MAX_BYTES:
                 raise ValueError('Video exceeds its size bound')
             if expected_size is not None and declared is not None and declared != expected_size:
-                raise ValueError('Incomplete MP4 transfer')
+                raise ProviderUnavailable('Incomplete MP4 transfer')
             for chunk in iter(lambda: response.read(256 * 1024), b''):
                 size += len(chunk)
                 if size > MAX_BYTES or time.monotonic() > deadline:
@@ -162,7 +185,7 @@ def progressive_transfer(request, url, folder, *, expected_size=None):
                 output.write(chunk)
         if ((declared is not None and size != declared)
                 or (expected_size is not None and size != expected_size)):
-            raise ValueError('Incomplete MP4 transfer')
+            raise ProviderUnavailable('Incomplete MP4 transfer')
         with pending.open('rb') as handle:
             if size < 1024 or b'ftyp' not in handle.read(128):
                 raise ValueError('Response is not an MP4')
@@ -249,7 +272,7 @@ def tiktok_download(link, folder):
     result = json.loads(raw)
     row = result.get('data') or {}
     if result.get('code') != 0 or not re.fullmatch(r'\d{10,25}', str(row.get('id', ''))):
-        raise ValueError('The public TikTok downloader returned no video')
+        raise ProviderUnavailable('The public TikTok downloader returned no video')
     if link.identity.isdigit() and str(row['id']) != link.identity:
         raise ValueError('TikTok returned another post')
     delivery = row.get('hdplay') or row.get('play')
@@ -257,44 +280,15 @@ def tiktok_download(link, folder):
         raise ValueError('The TikTok post has no downloadable video')
     if delivery.startswith('/'):
         delivery = 'https://www.tikwm.com' + delivery
-    target = folder / 'raw.mp4'
-    pending = target.with_suffix('.part')
-    size, deadline = 0, time.monotonic() + 300
-    with tikwm_request(delivery) as response, pending.open('wb') as output:
-        if response.status != 200:
-            raise ValueError('Expected a complete TikTok video response')
-        expected = response.headers.get('Content-Length')
-        if expected and int(expected) > MAX_BYTES:
-            raise ValueError('Video exceeds the 512 MiB bound')
-        for chunk in iter(lambda: response.read(256 * 1024), b''):
-            size += len(chunk)
-            if size > MAX_BYTES or time.monotonic() > deadline:
-                raise ValueError('Video exceeded its size or time bound')
-            output.write(chunk)
-    if expected and size != int(expected):
-        raise ValueError('Incomplete TikTok transfer')
-    with pending.open('rb') as handle:
-        if size < 1024 or b'ftyp' not in handle.read(128):
-            raise ValueError('TikTok response is not an MP4')
-    pending.replace(target)
-    return target
+    return progressive_transfer(tikwm_request, delivery, folder)
 
 
-def acquire(url, folder):
-    link = download_link(url)
-    folder.mkdir(parents=True, exist_ok=True)
-    receipt_path = folder / 'acquisition.json'
-    if receipt_path.exists():
-        previous = json.loads(receipt_path.read_text())
-        existing = folder / 'raw.mp4'
-        if (previous.get('source_url') == link.url and existing.is_file()
-                and existing.stat().st_size == previous.get('bytes') and digest(existing) == previous.get('sha256')):
-            return
+def primary_download(link, folder):
     if link.platform == 'instagram':
         from social_fetch.instagram_web import Form, download, page, videos
         rows = videos(Form(page('/process', {'q': link.url, 'scope': 'home', 'lang': 'en'})), link.identity)
         if not rows:
-            raise ValueError('The Instagram post has no public video')
+            raise ProviderUnavailable('The Instagram post has no public video')
         # A carousel is one selected post: acquire its first video, never the account.
         (folder / 'source').mkdir(exist_ok=True)
         receipt = download(rows[0], folder)
@@ -312,7 +306,7 @@ def acquire(url, folder):
         executable = shutil.which('yt-dlp')
         runner = [executable] if executable else [sys.executable, '-m', 'yt_dlp'] if importlib.util.find_spec('yt_dlp') else None
         if not runner:
-            raise ValueError('Public social extraction is not installed on this server')
+            raise ProviderUnavailable('Public social extraction is not installed on this server')
         # Restrict to progressive HTTPS MP4: no manifest, renderer, whole profile,
         # generic extractor, implicit config/cookies, external downloader or merge.
         target = folder / 'raw.mp4'
@@ -336,8 +330,67 @@ def acquire(url, folder):
             raise ValueError('Extractor returned another post')
     if not target.is_file() or not 1024 <= target.stat().st_size <= MAX_BYTES:
         raise ValueError('The post did not produce a bounded MP4')
-    write_json(receipt_path, {'source_url': link.url, 'platform': link.platform,
-                             'bytes': target.stat().st_size, 'sha256': digest(target)})
+    return target
+
+
+PRIMARY_ROUTES = {'instagram': 'snapinsta', 'tiktok': 'tikwm', 'x': 'x_syndication',
+    'facebook': 'facebook_extractor', 'reddit': 'reddit_extractor',
+    'bluesky': 'bluesky_appview', 'mastodon': 'mastodon_rest',
+    'pinterest': 'pinterest_extractor', 'twitch': 'twitch_extractor',
+    'snapchat': 'snapchat_extractor', 'linkedin': 'linkedin_extractor'}
+ROUTE_FAILURES = (URLError, TimeoutError, ConnectionError, subprocess.SubprocessError,
+                  ProviderUnavailable, json.JSONDecodeError)
+
+
+def acquire(url, folder):
+    link = download_link(url)
+    folder.mkdir(parents=True, exist_ok=True)
+    receipt_path = folder / 'acquisition.json'
+    if receipt_path.exists():
+        previous = json.loads(receipt_path.read_text())
+        existing = folder / 'raw.mp4'
+        if (previous.get('source_url') == link.url and existing.is_file()
+                and existing.stat().st_size == previous.get('bytes') and digest(existing) == previous.get('sha256')):
+            return
+    # A failed attempt must never lend bytes or an identity to the next route.
+    receipt_path.unlink(missing_ok=True)
+    target = folder / 'raw.mp4'
+    target.unlink(missing_ok=True)
+    attempts = []
+    fallback_name, fallback = FALLBACKS[link.platform]
+    for route, adapter in ((PRIMARY_ROUTES[link.platform], primary_download), (fallback_name, fallback)):
+        attempt = folder / ('attempt-' + route)
+        if attempt.exists():
+            shutil.rmtree(attempt)
+        attempt.mkdir()
+        try:
+            raw = adapter(link, attempt)
+            if not raw.is_file() or not 1024 <= raw.stat().st_size <= MAX_BYTES:
+                raise ValueError('The post did not produce a bounded MP4')
+            with raw.open('rb') as handle:
+                if b'ftyp' not in handle.read(128):
+                    raise ValueError('The response is not an MP4')
+            raw.replace(target)
+            attempts.append({'route': route, 'status': 'acquired'})
+            write_json(receipt_path, {'source_url': link.url, 'platform': link.platform,
+                'bytes': target.stat().st_size, 'sha256': digest(target),
+                'route': route, 'route_attempts': attempts})
+            return
+        except ROUTE_FAILURES as error:
+            # Only stable route names and exception classes cross the API boundary.
+            # Validation errors and local storage errors fail closed, without fallback.
+            attempts.append({'route': route, 'status': 'unavailable', 'error': type(error).__name__})
+            if hasattr(error, 'close'):
+                error.close()
+        except Exception as error:
+            attempts.append({'route': route, 'status': 'rejected' if isinstance(error, ValueError) else 'failed',
+                             'error': type(error).__name__})
+            raise
+        finally:
+            shutil.rmtree(attempt, ignore_errors=True)
+            write_json(folder / 'route-attempts.json', attempts)
+    raise ProviderUnavailable('All public acquisition routes failed: ' +
+                              ', '.join(a['route'] for a in attempts))
 
 
 def finalize(url, folder, video_id):
@@ -366,7 +419,8 @@ def finalize(url, folder, video_id):
     write_json(folder / (video_id + '.receipt.json'), {'downloaded': True, 'source_url': link.url,
         'platform': link.platform, 'bytes': final.stat().st_size, 'sha256': digest(final),
         'height': int(video['height']), 'width': int(video['width']), 'duration': duration,
-        'audio': any(stream['codec_type'] == 'audio' for stream in metadata['streams']), 'decode_sample_seconds': 1})
+        'audio': any(stream['codec_type'] == 'audio' for stream in metadata['streams']), 'decode_sample_seconds': 1,
+        **{k: receipt[k] for k in ('route', 'route_attempts') if k in receipt}})
 
 
 def main():

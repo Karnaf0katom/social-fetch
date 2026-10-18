@@ -109,6 +109,9 @@ def test_progressive_video_bound_is_enforced_without_content_length(tmp_path, mo
 @pytest.mark.parametrize('failure', ['identity', 'manifest', 'host', None])
 def test_secondary_extractor_cannot_cross_posts_or_escape_progressive_cdn(tmp_path, monkeypatch, failure):
     from social_fetch.social_download import delivery_url
+    from social_fetch.social_fallbacks import FALLBACKS, ProviderUnavailable
+    def unavailable(*_): raise ProviderUnavailable('Offline alternative unavailable')
+    monkeypatch.setitem(FALLBACKS, 'pinterest', ('pinterest_public_api', unavailable))
     monkeypatch.setattr('social_fetch.social_download.shutil.which', lambda _: '/usr/bin/yt-dlp')
     video = b'0000ftyp' + b'x' * 2048
     def run(command, **kwargs):
@@ -171,8 +174,9 @@ def test_generic_extraction_is_one_post_with_no_implicit_browser_or_host_config(
     monkeypatch.setattr('social_fetch.social_download.shutil.which', lambda _: '/usr/bin/yt-dlp')
     def run(command, **kwargs):
         commands.append(command)
-        (tmp_path / 'raw.mp4').write_bytes(b'ftyp' + b'x' * 1024)
-        (tmp_path / 'extracted-id.txt').write_text('12345678\n')
+        target = Path(command[command.index('--output') + 1])
+        target.write_bytes(b'ftyp' + b'x' * 1024)
+        (target.parent / 'extracted-id.txt').write_text('12345678\n')
     monkeypatch.setattr('social_fetch.social_download.subprocess.run', run)
     acquire('https://x.com/NASA/status/12345678', tmp_path)
     assert '--ignore-config' in commands[0] and '--no-playlist' in commands[0]
@@ -191,8 +195,9 @@ def test_venv_module_is_used_when_its_console_script_is_not_on_path(tmp_path, mo
     def run(command, **kwargs):
         assert command[:3] == [sys.executable, '-m', 'yt_dlp']
         assert '--ignore-config' in command and '--cookies-from-browser' not in command
-        (tmp_path / 'raw.mp4').write_bytes(b'ftyp' + b'x' * 1024)
-        (tmp_path / 'extracted-id.txt').write_text('12345678\n')
+        target = Path(command[command.index('--output') + 1])
+        target.write_bytes(b'ftyp' + b'x' * 1024)
+        (target.parent / 'extracted-id.txt').write_text('12345678\n')
     monkeypatch.setattr('social_fetch.social_download.subprocess.run', run)
     acquire('https://x.com/NASA/status/12345678', tmp_path)
 
@@ -201,8 +206,9 @@ def test_specific_x_video_keeps_the_selector_and_checks_the_parent_post(tmp_path
     monkeypatch.setattr('social_fetch.social_download.shutil.which', lambda _: '/usr/bin/yt-dlp')
     def run(command, **kwargs):
         assert command[-1] == 'https://x.com/NASA/status/12345678/video/2'
-        (tmp_path / 'raw.mp4').write_bytes(b'ftyp' + b'x' * 1024)
-        (tmp_path / 'extracted-id.txt').write_text('12345678\n')
+        target = Path(command[command.index('--output') + 1])
+        target.write_bytes(b'ftyp' + b'x' * 1024)
+        (target.parent / 'extracted-id.txt').write_text('12345678\n')
     monkeypatch.setattr('social_fetch.social_download.subprocess.run', run)
     acquire('https://x.com/NASA/status/12345678/video/2', tmp_path)
     assert json.loads((tmp_path / 'acquisition.json').read_text())['source_url'].endswith('/video/2')
@@ -211,8 +217,9 @@ def test_specific_x_video_keeps_the_selector_and_checks_the_parent_post(tmp_path
 def test_reddit_alphanumeric_post_identity_must_match_before_receipting(tmp_path, monkeypatch):
     monkeypatch.setattr('social_fetch.social_download.shutil.which', lambda _: '/usr/bin/yt-dlp')
     def run(command, **kwargs):
-        (tmp_path / 'raw.mp4').write_bytes(b'ftyp' + b'x' * 1024)
-        (tmp_path / 'extracted-id.txt').write_text('anotherpost\n')
+        target = Path(command[command.index('--output') + 1])
+        target.write_bytes(b'ftyp' + b'x' * 1024)
+        (target.parent / 'extracted-id.txt').write_text('anotherpost\n')
     monkeypatch.setattr('social_fetch.social_download.subprocess.run', run)
     with pytest.raises(ValueError, match='another post'):
         acquire('https://www.reddit.com/r/videos/comments/6rrwyj/', tmp_path)
@@ -227,8 +234,9 @@ def test_unreceipted_file_from_a_failed_attempt_cannot_be_relabelled_as_another_
     def run(command, **kwargs):
         # Model the extractor's default existing-file behavior. A prior failed
         # identity check may leave bytes without an accepted acquisition receipt.
-        if '--force-overwrites' in command: (tmp_path / 'raw.mp4').write_bytes(new)
-        (tmp_path / 'extracted-id.txt').write_text('12345678\n')
+        target = Path(command[command.index('--output') + 1])
+        if '--force-overwrites' in command: target.write_bytes(new)
+        (target.parent / 'extracted-id.txt').write_text('12345678\n')
     monkeypatch.setattr('social_fetch.social_download.subprocess.run', run)
     acquire('https://x.com/NASA/status/12345678', tmp_path)
     assert (tmp_path / 'raw.mp4').read_bytes() == new

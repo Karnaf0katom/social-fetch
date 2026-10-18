@@ -4,6 +4,49 @@ The code checks identity, expected byte ranges or response length, file signatur
 and measured streams. MP4 export verifies the recorded SHA-256. Service responses
 and availability can change independently of this source release.
 
+## 0.3.0 fallback and outstanding-platform checks — 2026-10-18
+
+The fallback registry covers each selectable social source. YouTube's independent
+connector requires an explicitly configured operator-owned Cobalt instance;
+SnapYT's existing relay-server switching remains the default. No operator-owned
+Cobalt instance was available for a fresh live probe. An evaluated Ytultra link
+failed direct media transfer with HTTP 403; it was not added as a working backend.
+
+The [fallback evidence](fallback-live-checks-v0.3.0.json) distinguishes direct
+adapter acquisitions, finalized/decoded media, export-hash checks, unavailable
+routes and the isolated installed-package check. Each network acquisition starts
+with empty source storage. Offline outage tests prove that the next route is
+selected, stale partial files are discarded, and identity/host/storage failures
+stop the job. They do not establish live provider availability.
+
+The separate [outstanding-platform audit](live-coverage-2026-10-18.json) covers
+Vimeo, Dailymotion, Threads, Bilibili, Reddit, VK, Douyin, Weibo, Rumble and public
+Telegram posts, with explicit limits and resume conditions. Raw route probes
+for unequipped platforms are distinct from a supported CLI integration. Existing
+Reddit/Bilibili blockers are not repeatedly retried without a changed route.
+Broader headline-format gaps remain listed separately; this is not exhaustive
+format or platform testing.
+
+<!-- fallback-measurements -->
+7 alternatives completed fresh transfers, media finalization, a one-second
+decode and a matching file-copy export hash:
+
+| Platform | Measured fallback output | Audio |
+| --- | --- | --- |
+| bluesky | 1920 x 1080, 29.737 s | Yes |
+| instagram | 720 x 1280, 47.467 s | Yes |
+| linkedin | 1428 x 720, 161.866 s | Yes |
+| mastodon | 1692 x 1484, 38.850 s | No: silent gifv |
+| pinterest | 1080 x 1920, 57.700 s | Yes |
+| snapchat | 480 x 880, 4.642 s | Yes |
+| twitch | 1920 x 1080, 32.099 s | Yes |
+
+TikTok, X and Facebook alternatives were unavailable for the measured posts. Reddit
+retains its access block. YouTube's independent connector remains unverified
+until an operator-owned instance is configured. These limits do not replace
+the earlier primary-route evidence.
+<!-- /fallback-measurements -->
+
 ## 0.2.0 secondary-source VM checks — 2026-10-18
 
 Each row started from an empty data directory on a Linux datacenter VM, completed

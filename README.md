@@ -56,7 +56,7 @@ sudo apt-get update
 sudo apt-get install -y python3-venv ffmpeg
 python3 -m venv .venv
 . .venv/bin/activate
-python -m pip install 'git+https://github.com/Karnaf0katom/social-fetch.git@v0.2.0'
+python -m pip install 'git+https://github.com/Karnaf0katom/social-fetch.git@v0.3.0'
 social-fetch doctor
 ```
 
@@ -134,6 +134,44 @@ download failures return the saved failed job. `Client.export` accepts ready job
 and checks both byte length and SHA-256 while copying.
 Failed jobs include a sanitized `failure_stage` and `error_code` when available;
 new completed social jobs also report whether the measured file contains audio.
+Completed social jobs include `route` and `route_attempts`, recording which
+adapter supplied the file and which routes were unavailable. These contain stable
+route names and exception types, never delivery URLs or provider response text.
+
+## Acquisition fallbacks
+
+An unavailable primary route automatically tries one platform-specific
+alternative. Each attempt uses a separate directory; only a completed, bounded
+MP4 can be promoted into the source receipt. A post-identity mismatch, forbidden
+delivery host, invalid file signature or local disk error stops the job.
+
+| Platform | Primary | Alternative |
+| --- | --- | --- |
+| YouTube | SnapYT, including assigned relay-server switching | An explicitly configured, operator-owned Cobalt instance |
+| Instagram | SnapInsta.lc | Allowlisted Instagram extractor and bounded CDN transfer |
+| TikTok | TikWM | Allowlisted TikTok extractor and bounded CDN transfer |
+| X | Public syndication through yt-dlp | FxTwitter API and approved Twitter media CDN |
+| Facebook | yt-dlp | Selected public page's progressive video metadata |
+| Reddit | yt-dlp | Selected native-video JSON; refuses split audio |
+| Bluesky | Public AppView plus PDS blob | Handle/PLC lookup and the original PDS record/blob |
+| Pinterest | yt-dlp metadata | Public pin resource and native MP4 |
+| Twitch clips | yt-dlp metadata | Public clip GraphQL and native MP4 |
+| Snapchat Spotlight | yt-dlp metadata | Selected story's public page metadata |
+| LinkedIn | yt-dlp metadata | Selected post's public video element |
+| mastodon.social | Public status REST API | Public ActivityPub Note and native attachment |
+
+These are scoped alternative routes, not an all-platform uptime guarantee.
+Platform-native alternatives can share infrastructure with the primary route.
+See [support](docs/SUPPORT.md) for the measured live outcomes and remaining blocks.
+
+YouTube keeps its existing SnapYT route by default. To enable an independent
+fallback, set `SOCIAL_FETCH_COBALT_URL` to the HTTPS origin of your own Cobalt
+instance. No hosted instance, login or paid service is selected automatically.
+The configured instance must return a same-origin MP4 tunnel whose filename
+contains the requested video ID, with video and audio together. Direct
+Googlevideo links, pickers and unrelated tunnel hosts are refused. This connector
+has offline contract tests; an operator-owned instance was not available for a
+fresh live YouTube download in this release.
 
 ## Platform scope
 

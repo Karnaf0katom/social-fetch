@@ -86,7 +86,7 @@ class DownloadJobs:
         return job
 
     def public(self, job):
-        return {k: job[k] for k in ('id', 'source_url', 'platform', 'title', 'status', 'message', 'created_at', 'updated_at', 'bytes', 'width', 'height', 'duration', 'sha256', 'audio', 'error_code', 'failure_stage') if k in job}
+        return {k: job[k] for k in ('id', 'source_url', 'platform', 'title', 'status', 'message', 'created_at', 'updated_at', 'bytes', 'width', 'height', 'duration', 'sha256', 'audio', 'route', 'route_attempts', 'error_code', 'failure_stage') if k in job}
 
     def _jobs(self):
         rows = []
@@ -282,13 +282,28 @@ class DownloadJobs:
             if (not receipt['downloaded'] or final.stat().st_size != receipt['bytes']
                     or platform != 'youtube' and receipt.get('source_url') != job['source_url']):
                 raise RuntimeError('Completed file did not pass its receipt check')
-            update(status='ready', message='MP4 ready', **{k: receipt[k] for k in ('bytes', 'height', 'duration', 'width', 'sha256', 'audio') if k in receipt})
+            update(status='ready', message='MP4 ready', **{k: receipt[k] for k in ('bytes', 'height', 'duration', 'width', 'sha256', 'audio', 'route', 'route_attempts') if k in receipt})
         except Exception as error:
             # Keep service tokens, subprocess output and host paths out of the public response.
             code = 'timeout' if isinstance(error, subprocess.TimeoutExpired) else stage + '_failed'
             message = ('Public source acquisition failed. The post may require login, be unavailable, or have no downloadable video.'
                        if stage == 'acquisition' else 'Video assembly or media verification failed. Reconnect to the saved job or retry the same source.')
-            update(status='failed', error_code=code, failure_stage=stage, message=message)
+            diagnostics = {}
+            attempts_path = folder / 'route-attempts.json'
+            if stage == 'acquisition' and attempts_path.is_file() and attempts_path.stat().st_size <= 16384:
+                try:
+                    from social_fetch.social_download import PRIMARY_ROUTES
+                    from social_fetch.social_fallbacks import FALLBACKS
+                    allowed = set(PRIMARY_ROUTES.values()) | {v[0] for v in FALLBACKS.values()}
+                    rows = json.loads(attempts_path.read_text())
+                    if isinstance(rows, list) and len(rows) <= 2:
+                        diagnostics['route_attempts'] = [
+                            {'route': row['route'], 'status': row['status']}
+                            for row in rows if isinstance(row, dict) and row.get('route') in allowed
+                            and row.get('status') in {'acquired', 'unavailable', 'rejected', 'failed'}]
+                except (OSError, ValueError, KeyError):
+                    pass
+            update(status='failed', error_code=code, failure_stage=stage, message=message, **diagnostics)
         finally:
             with self.lock():
                 self._dispatch()

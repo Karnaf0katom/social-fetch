@@ -13,10 +13,15 @@ import json
 from pathlib import Path
 import re
 import subprocess
+import sys
 import time
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
+
+# Preserve direct-script use by the existing detached worker as well as -m use.
+if __name__ == '__main__' and not __package__:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 SITE = "https://www.snapyt.app"
 AJAX = SITE + "/wp-admin/admin-ajax.php"
@@ -125,7 +130,8 @@ def select_streams(rows, video_id, height):
     audios = [r for r in available if r["kind"] == "audio-only" and r["ext"] in {"m4a", "opus"}
               and "dubbed" not in r["track"]]
     if not videos or not audios:
-        raise ValueError("Service did not provide both an MP4 video and non-dubbed audio")
+        from social_fetch.social_fallbacks import ProviderUnavailable
+        raise ProviderUnavailable("Service did not provide both an MP4 video and non-dubbed audio")
     audio = max(audios, key=lambda r: ("original" in r["track"], r["ext"] == "m4a", r["bytes"]))
     if audio["ext"] == "opus":
         audio = {**audio, "ext": "webm"}
@@ -237,7 +243,7 @@ def download_stream(stream, path):
     partial.replace(path)
 
 
-def acquire(url, out, height, *, download_only=False, finalize_only=False):
+def snapyt_acquire(url, out, height, *, download_only=False, finalize_only=False):
     supplied_url = url
     url = youtube_url(url)
     video_id = parse_qs(urlsplit(url).query)["v"][0]
@@ -249,13 +255,15 @@ def acquire(url, out, height, *, download_only=False, finalize_only=False):
     nonce_response = json.loads(text_request(AJAX, {"action": "vd_fresh_nonce"}))
     nonce = nonce_response.get("data", {}).get("nonce")
     if not nonce_response.get("success") or not nonce:
-        raise ValueError("Could not initialize the public download form")
+        from social_fetch.social_fallbacks import ProviderUnavailable
+        raise ProviderUnavailable("Could not initialize the public download form")
     lookup = json.loads(text_request(AJAX, {
         "action": "process_video_url", "video_url": url, "security": nonce,
     }))
     redirect = lookup.get("data", {}).get("redirect") if isinstance(lookup.get("data"), dict) else None
     if not lookup.get("success") or not redirect:
-        raise ValueError("Download service did not return a preview for this video")
+        from social_fetch.social_fallbacks import ProviderUnavailable
+        raise ProviderUnavailable("Download service did not return a preview for this video")
     options = Options()
     page = text_request(site_url(redirect))
     options.feed(page)
@@ -271,6 +279,29 @@ def acquire(url, out, height, *, download_only=False, finalize_only=False):
         print(json.dumps({"stage": "streams_saved", **saved}), flush=True)
         return saved
     return finalize(url, video_id, out, saved["streams"])
+
+
+def acquire(url, out, height, *, download_only=False, finalize_only=False):
+    import social_fetch.youtube_fallback as youtube_fallback
+    from social_fetch.social_fallbacks import ProviderUnavailable
+    canonical = youtube_url(url)
+    video_id = parse_qs(urlsplit(canonical).query)['v'][0]
+    marker = out / (video_id + '.fallback.json')
+    if finalize_only:
+        if marker.exists():
+            return youtube_fallback.finalize(canonical, video_id, out)
+        return snapyt_acquire(url, out, height, finalize_only=True)
+    marker.unlink(missing_ok=True)
+    try:
+        saved = snapyt_acquire(url, out, height, download_only=True)
+    except (URLError, TimeoutError, ConnectionError, ProviderUnavailable, json.JSONDecodeError):
+        if not youtube_fallback.endpoint():
+            raise
+        # The operator explicitly selects their own independent relay. No hosted
+        # third-party Cobalt instance is silently enrolled as a package backend.
+        saved = youtube_fallback.acquire(canonical, out, video_id, height)
+        return saved if download_only else youtube_fallback.finalize(canonical, video_id, out)
+    return saved if download_only else finalize(canonical, video_id, out, saved['streams'])
 
 
 def finalize(url, video_id, out, streams):
@@ -303,7 +334,8 @@ def finalize(url, video_id, out, streams):
     receipt = {"id": video_id, "source_url": url, "method": "snapyt_public_form",
                "service": SITE, "browser_used": False, "account_cookies_used": False,
                "downloaded": True, "path": str(final.resolve()), "bytes": final.stat().st_size,
-               "sha256": digest.hexdigest(),
+               "sha256": digest.hexdigest(), "audio": True, "route": "snapyt",
+               "route_attempts": [{"route": "snapyt", "status": "acquired"}],
                "width": video["width"], "height": video["height"],
                "fps": float(Fraction(video["avg_frame_rate"])),
                "duration": float(probe["format"]["duration"]),

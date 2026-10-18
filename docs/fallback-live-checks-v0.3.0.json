@@ -1,0 +1,240 @@
+{
+  "release": "0.3.0 alpha",
+  "observed_at": "2026-10-18T11:20:24.069407+00:00",
+  "environment": "Linux datacenter VM; anonymous public routes, no user cookies, browser profile or provider credentials",
+  "scope": "Fresh forced-alternative adapter transfers and existing media finalization, distinct from automatic-failover fixtures and installed CLI checks.",
+  "summary": {
+    "selectable_platforms": 12,
+    "live_verified_fallback_samples": 7,
+    "implemented_but_live_unavailable": 3,
+    "not_reprobed": 1,
+    "operator_configuration_required": 1
+  },
+  "samples": [
+    {
+      "platform": "bluesky",
+      "source_url": "https://bsky.app/profile/bsky.app/post/3l3vgf77uco2g",
+      "route": "bluesky_public_repo",
+      "fresh_empty_data_directory": true,
+      "observed_at": "2026-10-18T10:57:35.684822+00:00",
+      "acquisition": "completed",
+      "bytes": 6688967,
+      "sha256": "f3c3fecb52a9e3d9f7c88d6510baadde425c0444f66efd624eca881661b1d862",
+      "seconds": 3.71,
+      "finalization": "verified",
+      "width": 1920,
+      "height": 1080,
+      "duration": 29.737,
+      "audio": true,
+      "decode_sample_seconds": 1,
+      "export_sha256_matches": true,
+      "export_check": "bounded adapter/finalizer file copy; not an independent CLI worker probe"
+    },
+    {
+      "platform": "facebook",
+      "source_url": "https://www.facebook.com/watch/?v=10155529876156509",
+      "route": "facebook_public_page",
+      "fresh_empty_data_directory": true,
+      "observed_at": "2026-10-18T10:58:41.972228+00:00",
+      "acquisition": "unavailable",
+      "error": "ProviderUnavailable",
+      "reason": "The public post has no progressive MP4",
+      "seconds": 2.41,
+      "resume_condition": "A working anonymous selected-post metadata and approved progressive media route, followed by a completed live check."
+    },
+    {
+      "platform": "instagram",
+      "source_url": "https://www.instagram.com/p/DeWYHFHIkVC/",
+      "route": "instagram_extractor",
+      "fresh_empty_data_directory": true,
+      "observed_at": "2026-10-18T10:58:13.951713+00:00",
+      "acquisition": "completed",
+      "bytes": 10329647,
+      "sha256": "43d3b7fc940fafd5ac6cc3bc0d9d1fff602ffc9f7ac3c5eab73b729406cc0782",
+      "seconds": 27.88,
+      "finalization": "verified",
+      "width": 720,
+      "height": 1280,
+      "duration": 47.466667,
+      "audio": true,
+      "decode_sample_seconds": 1,
+      "export_sha256_matches": true,
+      "export_check": "bounded adapter/finalizer file copy; not an independent CLI worker probe"
+    },
+    {
+      "platform": "linkedin",
+      "source_url": "https://www.linkedin.com/posts/the-mathworks_2_what-is-mathworks-cloud-center-activity-7151241570371948544-4Gu7/",
+      "route": "linkedin_public_page",
+      "fresh_empty_data_directory": true,
+      "observed_at": "2026-10-18T11:06:17.951582+00:00",
+      "acquisition": "completed",
+      "bytes": 5663647,
+      "sha256": "831619cfccd2256cd1281db728670004dde819d5535053c0728ce0dbfa591752",
+      "seconds": 1.47,
+      "finalization": "verified",
+      "width": 1428,
+      "height": 720,
+      "duration": 161.866009,
+      "audio": true,
+      "decode_sample_seconds": 1,
+      "export_sha256_matches": true,
+      "export_check": "bounded adapter/finalizer file copy; not an independent CLI worker probe"
+    },
+    {
+      "platform": "mastodon",
+      "source_url": "https://mastodon.social/@mastodon/116839714185151652",
+      "route": "mastodon_activitypub",
+      "fresh_empty_data_directory": true,
+      "observed_at": "2026-10-18T10:57:45.769467+00:00",
+      "acquisition": "completed",
+      "bytes": 1287545,
+      "sha256": "a1e61bc1b63df48e61721a39515ddcd65e41b6d1bc964d69a24a747012e73364",
+      "seconds": 1.45,
+      "finalization": "verified",
+      "width": 1692,
+      "height": 1484,
+      "duration": 38.85,
+      "audio": false,
+      "decode_sample_seconds": 1,
+      "export_sha256_matches": true,
+      "export_check": "bounded adapter/finalizer file copy; not an independent CLI worker probe"
+    },
+    {
+      "platform": "pinterest",
+      "source_url": "https://www.pinterest.com/pin/664281013778109217/",
+      "route": "pinterest_public_api",
+      "fresh_empty_data_directory": true,
+      "observed_at": "2026-10-18T11:06:09.301346+00:00",
+      "acquisition": "completed",
+      "bytes": 18403924,
+      "sha256": "4599502cb76586e25cf6b4b7383babb0254fff33717d0f0ea0c48f1536ed9a6c",
+      "seconds": 3.97,
+      "finalization": "verified",
+      "width": 1080,
+      "height": 1920,
+      "duration": 57.7,
+      "audio": true,
+      "decode_sample_seconds": 1,
+      "export_sha256_matches": true,
+      "export_check": "bounded adapter/finalizer file copy; not an independent CLI worker probe"
+    },
+    {
+      "platform": "snapchat",
+      "source_url": "https://www.snapchat.com/spotlight/W7_EDlXWTBiXAEEniNoMPwAAYYWtidGhudGZpAX1TKn0JAX1TKnXJAAAAAA",
+      "route": "snapchat_public_page",
+      "fresh_empty_data_directory": true,
+      "observed_at": "2026-10-18T10:57:40.061943+00:00",
+      "acquisition": "completed",
+      "bytes": 583697,
+      "sha256": "d404e7d75eabf2c1645ef75b4bc9f8078549615d30101f0cf1bd405959d86cdb",
+      "seconds": 4.31,
+      "finalization": "verified",
+      "width": 480,
+      "height": 880,
+      "duration": 4.641995,
+      "audio": true,
+      "decode_sample_seconds": 1,
+      "export_sha256_matches": true,
+      "export_check": "bounded adapter/finalizer file copy; not an independent CLI worker probe"
+    },
+    {
+      "platform": "tiktok",
+      "source_url": "https://www.tiktok.com/@patroxofficial/video/6742501081818877190",
+      "route": "tiktok_extractor",
+      "fresh_empty_data_directory": true,
+      "observed_at": "2026-10-18T11:17:13.141560+00:00",
+      "acquisition": "unavailable",
+      "error": "HTTPError",
+      "http_status": 403,
+      "seconds": 18.76,
+      "resume_condition": "A working anonymous selected-post metadata and approved progressive media route, followed by a completed live check.",
+      "reason": "The approved native TikTok CDN returned HTTP 403 during the complete media request."
+    },
+    {
+      "platform": "twitch",
+      "source_url": "https://clips.twitch.tv/FaintLightGullWholeWheat",
+      "route": "twitch_public_graphql",
+      "fresh_empty_data_directory": true,
+      "observed_at": "2026-10-18T11:06:13.276072+00:00",
+      "acquisition": "completed",
+      "bytes": 16299421,
+      "sha256": "4057cefed283eb3547d7d6ac5f8eed55f0443cd38270a20d8ba7fc2ed25a5b59",
+      "seconds": 4.67,
+      "finalization": "verified",
+      "width": 1920,
+      "height": 1080,
+      "duration": 32.099,
+      "audio": true,
+      "decode_sample_seconds": 1,
+      "export_sha256_matches": true,
+      "export_check": "bounded adapter/finalizer file copy; not an independent CLI worker probe"
+    },
+    {
+      "platform": "x",
+      "source_url": "https://x.com/TopHeroes_/status/2001950365332455490",
+      "route": "fxtwitter",
+      "fresh_empty_data_directory": true,
+      "observed_at": "2026-10-18T10:58:41.840220+00:00",
+      "acquisition": "unavailable",
+      "error": "HTTPError",
+      "http_status": 403,
+      "seconds": 0.12,
+      "resume_condition": "A working anonymous selected-post metadata and approved progressive media route, followed by a completed live check."
+    },
+    {
+      "platform": "reddit",
+      "source_url": "https://www.reddit.com/r/videos/comments/6rrwyj/",
+      "route": "reddit_public_json",
+      "acquisition": "not_reprobed",
+      "reason": "Known anonymous VM API/session access block; no new working route evidence. Split audio remains excluded.",
+      "resume_condition": "A working anonymous metadata/delivery route and deliberately verified audio handling."
+    },
+    {
+      "platform": "youtube",
+      "source_url": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+      "route": "configured_cobalt",
+      "acquisition": "unverified",
+      "reason": "No operator-owned instance configured. Offline tests cover tunnel origin, selected ID, transfer receipt and required audio.",
+      "resume_condition": "An explicitly configured operator-owned Cobalt API with working YouTube access."
+    }
+  ],
+  "rejected_candidates": [
+    {
+      "service": "Ytultra",
+      "outcome": "Returned direct Googlevideo links, but a media request returned HTTP 403 from the VM. No backend was added."
+    },
+    {
+      "service": "CNVMP3",
+      "outcome": "Title metadata was readable; conversion lookup returned HTTP 403. No backend was added."
+    },
+    {
+      "service": "vxTwitter",
+      "outcome": "Alternative public API request returned HTTP 403. No backend was added."
+    }
+  ],
+  "limits": "One sample per live-verified alternative; no comprehensive format or availability claim. Direct adapter file-copy hash checks are not independent Client worker/export checks. Package checks separately exercise a fresh installed CLI acquisition and checked export.",
+  "outstanding_platform_audit": "live-coverage-2026-10-18.json",
+  "maintained_tests": {
+    "passed": 230,
+    "cpu_job": 1551
+  },
+  "fresh_primary_youtube": {
+    "source_url": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+    "bytes": 744412,
+    "sha256": "5d008ea12facd6220c2ae70132ac0e2a9cb4a37f6c684d4fc85a1510d18d84bd",
+    "width": 320,
+    "height": 240,
+    "duration": 19.063583,
+    "audio": true,
+    "route": "snapyt",
+    "route_attempts": [
+      {
+        "route": "snapyt",
+        "status": "acquired"
+      }
+    ],
+    "decode_sample_seconds": 1,
+    "export_sha256_matches": true,
+    "fresh_empty_data_directory": true
+  }
+}

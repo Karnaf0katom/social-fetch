@@ -51,6 +51,17 @@ def test_shorts_finalize_uses_existing_canonical_manifest(monkeypatch, tmp_path)
                        finalize_only=True) == (canonical, VIDEO, tmp_path, ["saved-streams"])
 
 
+def test_direct_worker_script_can_import_its_new_sibling_adapters(tmp_path):
+    import subprocess
+    import sys
+    result = subprocess.run([sys.executable, '-I', str(Path(web.__file__)),
+        f'https://www.youtube.com/watch?v={VIDEO}', '--out', str(tmp_path), '--finalize-only'],
+        cwd=tmp_path, capture_output=True, text=True, timeout=15)
+    assert result.returncode == 1  # No saved streams; the check never needs network access.
+    assert 'No module named' not in result.stdout + result.stderr
+    assert 'streams.json' in result.stdout
+
+
 def option(label, kind, ext, tag, video_id=VIDEO):
     return {"data-force": f"https://www.snapyt.app/wp-admin/admin-ajax.php?action=snapyt_force_download&t={video_id}.public-form-token&tg={tag}",
             "data-kind": kind, "data-ext": ext, "data-label": label, "data-bytes": "1000000"}

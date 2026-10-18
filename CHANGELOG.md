@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.3.0 alpha — 2026-10-18
+
+- Add one explicit acquisition alternative for each selectable social source.
+  YouTube retains SnapYT relay-server switching and gains an optional connector
+  for an operator-owned Cobalt instance; no hosted backend is enrolled by default.
+- Isolate route attempts, discard failed partial files, and retain sanitized route
+  names/outcomes in acquisition receipts and completed-job JSON.
+- Preserve selected-post identity, source-specific CDN/redirect checks and bounded
+  progressive MP4 delivery. Validation and local storage errors fail closed.
+- Reuse the bounded transfer implementation for TikTok and reject native Reddit
+  fallback video that would silently discard a separate audio stream.
+- Document measured fallback outcomes and the outstanding-platform audit
+  separately from offline regressions and historical primary-route checks.
+
 ## 0.2.0 alpha — 2026-10-18
 
 - Add explicitly selected secondary sources: Bluesky, Pinterest video pins,

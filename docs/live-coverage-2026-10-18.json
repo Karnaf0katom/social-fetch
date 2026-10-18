@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-18T11:05:44Z",
+  "environment": "Linux datacenter VM; no browser profile, user cookies, API keys, or logged-in sessions",
+  "scope": "Live route assessment for social-fetch gaps. Raw route probes are distinguished from integrated Client/download/export verification.",
+  "tooling": {
+    "yt_dlp_version": "2026.08.19",
+    "probe_bound": "55 seconds per URL; socket timeout 15 seconds; one retry; no playlist; skip download",
+    "metadata_cpu_job": 1532,
+    "transfer_cpu_job": 1535,
+    "media_validation_cpu_job": 1544,
+    "cpu_job_status": "all_passed",
+    "transfer_bound": "512 MiB per source; 300-second per-source deadline; 20-second connect/read timeout; allowlisted original and CDN hosts; manual redirect validation",
+    "media_validation": "ffprobe stream inspection plus one-second ffmpeg video decode"
+  },
+  "summary": {
+    "outstanding_platforms": 10,
+    "live_metadata_partial": 4,
+    "live_blocked": 3,
+    "not_reprobed_without_new_route": 3,
+    "completed_raw_route_downloads": 2,
+    "completed_integrated_downloads": 0,
+    "verified_new_adapters": 0
+  },
+  "platforms": [
+    {
+      "platform": "vimeo",
+      "source_url": "https://vimeo.com/76979871",
+      "route": "Current installed Vimeo extractor, anonymous web client",
+      "discovery": "previously_verified",
+      "metadata": "blocked",
+      "download": "not_attempted",
+      "result": "The fresh anonymous metadata request was refused before formats were returned: the web client requires a logged-in session.",
+      "resume_condition": "A current anonymous public route, or explicitly authorized credentials followed by a separate bounded streaming/download check."
+    },
+    {
+      "platform": "dailymotion",
+      "source_url": "https://www.dailymotion.com/video/x9tp9we",
+      "route": "Current installed Dailymotion extractor",
+      "discovery": "previously_verified",
+      "metadata": "partial",
+      "download": "not_attempted",
+      "result": "Fresh metadata resolved two HLS-only formats (m3u8_native), declared MP4, 848x480, 653 seconds, with audio and video codecs in the format table. No manifest, segment, or media bytes were fetched.",
+      "resume_condition": "Implement or select a bounded HLS path, then verify manifest and segment limits, completed audio/video output, one-second decode, and export hash."
+    },
+    {
+      "platform": "threads",
+      "source_url": "https://www.threads.com/@threads/post/DDut1btS3ED",
+      "route": "Public page plus current installed extractor inventory",
+      "discovery": "previously_verified",
+      "metadata": "unverified",
+      "download": "not_attempted",
+      "result": "No Threads extractor is present in the current installed extractor inventory. The previous readable-page check did not bind a native video object to this post.",
+      "untested_reason": "No new selected-post media route was found; repeating the readable-page probe would not add evidence.",
+      "resume_condition": "A primary page/API route that binds native media to a real public post, followed by bounded transfer proof."
+    },
+    {
+      "platform": "bilibili",
+      "source_url": "https://www.bilibili.com/video/BV13x41117TL/",
+      "route": "Current installed BiliBili extractor exists; prior live route returned HTTP 412",
+      "discovery": "previously_verified",
+      "metadata": "unavailable",
+      "download": "not_attempted",
+      "result": "Not reprobed: no new anonymous datacenter route was identified after the prior HTTP 412 result.",
+      "untested_reason": "The continuation brief explicitly stops unchanged Bilibili blockers without new route evidence.",
+      "resume_condition": "A working public datacenter route, then fresh split audio/video and region-limit checks."
+    },
+    {
+      "platform": "reddit",
+      "source_url": "https://www.reddit.com/r/videos/comments/6rrwyj/",
+      "route": "Current installed Reddit extractor exists; prior session/API checks returned 403/authentication failures",
+      "discovery": "previously_verified",
+      "metadata": "unavailable",
+      "download": "not_attempted",
+      "result": "Not reprobed: no new anonymous VM metadata or delivery route was identified after the prior access failures.",
+      "untested_reason": "The continuation brief explicitly stops unchanged Reddit blockers without new route evidence.",
+      "resume_condition": "A working anonymous datacenter metadata/delivery route, then fresh split-audio and manifest checks."
+    },
+    {
+      "platform": "vk",
+      "source_url": "https://vk.com/video205387401_165548505",
+      "route": "Current installed VK extractor using an upstream extractor fixture URL",
+      "discovery": "fixture_only",
+      "metadata": "partial",
+      "download": "blocked_after_metadata",
+      "result": "Fresh metadata returned 30 formats, up to 720p, with HTTPS and HLS routes and declared audio/video codecs. A bounded transfer of the selected 720p progressive format reached the allowlisted okcdn.ru host with no redirect, but returned HTTP 400 before media bytes were received.",
+      "resume_condition": "Establish the required public request headers or obtain a refreshed usable progressive route, then complete stream inspection and decode. Public discovery evidence also remains required."
+    },
+    {
+      "platform": "douyin",
+      "source_url": "https://www.douyin.com/video/7117200114686414094",
+      "route": "Current installed Douyin extractor using a publicly indexed video URL",
+      "discovery": "verified_by_public_index",
+      "metadata": "blocked",
+      "download": "not_attempted",
+      "result": "Fresh metadata failed: the web detail JSON returned HTTP 403 and the extractor required fresh cookies.",
+      "resume_condition": "An anonymous datacenter route or an explicitly authorized cookie source, followed by a bounded completed acquisition."
+    },
+    {
+      "platform": "weibo",
+      "source_url": "https://m.weibo.cn/status/4189191225395228",
+      "route": "Current installed Weibo extractor using an upstream extractor fixture URL",
+      "discovery": "fixture_only",
+      "metadata": "partial",
+      "download": "verified_raw_route_probe",
+      "integration_status": "Raw extractor-derived progressive transfer only; social-fetch Client and export were not exercised.",
+      "host_validation": {
+        "source_host": "m.weibo.cn",
+        "cdn_host": "f.us.sinaimg.cn",
+        "redirect_count": 0
+      },
+      "media": {
+        "bytes": 1810094,
+        "sha256": "17f407a0e005d2ab73b276e5d5e1d8345f89fecab7f9e521648f252738575aca",
+        "width": 480,
+        "height": 480,
+        "duration": 53.173991,
+        "video_codec": "h264",
+        "audio": true,
+        "audio_codec": "aac",
+        "decode_sample_seconds": 1,
+        "decode_passed": true
+      },
+      "result": "A fresh bounded progressive MP4 transfer completed from the validated Weibo CDN host; ffprobe found H.264 video plus AAC audio and a one-second ffmpeg decode passed.",
+      "resume_condition": "Add public discovery evidence and integrate the route before claiming social-fetch Client/download/export support."
+    },
+    {
+      "platform": "rumble",
+      "source_url": "https://rumble.com/vdmum1-moose-the-dog-helps-girls-dig-a-snow-fort.html",
+      "route": "Current installed Rumble extractor using an upstream extractor fixture URL",
+      "discovery": "fixture_only",
+      "metadata": "blocked",
+      "download": "not_attempted",
+      "result": "Fresh anonymous webpage retrieval returned HTTP 403 before formats were available.",
+      "resume_condition": "A working public datacenter page/API route, then bounded metadata and completed acquisition checks."
+    },
+    {
+      "platform": "telegram",
+      "source_url": "https://t.me/europa_press/613",
+      "route": "Current installed Telegram embed extractor using an upstream extractor fixture URL",
+      "discovery": "fixture_only",
+      "metadata": "partial",
+      "download": "verified_raw_route_probe",
+      "integration_status": "Raw extractor-derived progressive transfer only; social-fetch Client and export were not exercised.",
+      "host_validation": {
+        "source_host": "t.me",
+        "cdn_host": "cdn4.telesco.pe",
+        "redirect_count": 0
+      },
+      "media": {
+        "bytes": 5796200,
+        "sha256": "72fa238c563a61c14bea819a3b46f91bda5ee8216b3606ec63916b4e9afa8522",
+        "width": 848,
+        "height": 480,
+        "duration": 61.114921,
+        "video_codec": "h264",
+        "audio": true,
+        "audio_codec": "aac",
+        "decode_sample_seconds": 1,
+        "decode_passed": true
+      },
+      "result": "A fresh bounded progressive MP4 transfer completed from the validated Telegram CDN host; ffprobe found H.264 video plus AAC audio and a one-second ffmpeg decode passed.",
+      "resume_condition": "Establish public channel/post discovery and integrate the route before claiming social-fetch Client/download/export support."
+    }
+  ],
+  "headline_format_gaps": [
+    {
+      "format": "YouTube Shorts",
+      "status": "untested_in_this_pass",
+      "reason": "The bounded pass prioritized the ten missing platforms and avoided overlapping the owner's active YouTube fallback work. Existing evidence covers watch-link acquisition only."
+    },
+    {
+      "format": "YouTube available HD rendition",
+      "status": "untested_in_this_pass",
+      "reason": "The bounded pass prioritized missing platforms. The previous fresh sample was 240p; older complete 1080p inputs are not a fresh HD route check."
+    },
+    {
+      "format": "Instagram first-video carousel",
+      "status": "untested_in_this_pass",
+      "reason": "No non-overlapping live sample was selected before the bounded platform probes completed. Existing evidence covers a public post/Reel baseline, not a carousel."
+    },
+    {
+      "format": "TikTok share link",
+      "status": "untested_in_this_pass",
+      "reason": "No non-overlapping live share-link sample was selected before the bounded platform probes completed. Existing evidence covers a canonical video URL baseline."
+    },
+    {
+      "format": "X video selector",
+      "status": "untested_in_this_pass",
+      "reason": "The bounded pass did not repeat the parent's active X fallback work. Existing evidence covers a single-video post baseline."
+    },
+    {
+      "format": "Facebook share/watch links",
+      "status": "untested_in_this_pass",
+      "reason": "No non-overlapping live share/watch sample was selected before the bounded platform probes completed. Existing evidence covers one canonical Facebook video baseline."
+    }
+  ],
+  "sanitization": "This report contains public source URLs and measured status only. It excludes delivery URLs, signed tokens, cookies, credentials, media, and raw logs."
+}

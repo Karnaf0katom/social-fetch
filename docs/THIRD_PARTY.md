@@ -9,7 +9,8 @@ external services or downloaded media.
   and Reddit extraction paths, and metadata extraction for Pinterest, Twitch
   clips, Snapchat Spotlight and public LinkedIn posts. It is an attributed
   dependency; the four secondary routes validate and stream the selected MP4
-  through our own bounded HTTP transfer. It is not used for our YouTube route.
+  through our own bounded HTTP transfer. It also provides the optional direct
+  Instagram and TikTok fallback metadata. It is not used for our YouTube route.
 - [Bluesky](https://docs.bsky.app/) and [Mastodon](https://docs.joinmastodon.org/)
   publish the public metadata/blob APIs used by their scoped native MP4 adapters.
 - [FFmpeg](https://ffmpeg.org/legal.html) and ffprobe are system dependencies.
@@ -18,6 +19,12 @@ external services or downloaded media.
   [TikWM](https://www.tikwm.com/) are external public services used by the
   YouTube, Instagram and TikTok adapters respectively. They are independent of
   this project and can change, rate limit or become unavailable.
+- [FxEmbed](https://github.com/FxEmbed/FxEmbed) supplies the public FxTwitter API
+  used by the X alternative. Its delivery stays on approved Twitter media hosts.
+- [Cobalt](https://github.com/imputnet/cobalt/blob/main/docs/api.md) defines the
+  optional YouTube relay API. Users must explicitly configure their own instance;
+  this package includes no Cobalt server code and selects no hosted instance.
+  Cobalt's upstream license is separate from this package's MIT license.
 
 No third-party media, browser profile, cookies, credentials or service installation
 is included. This project is unaffiliated with the platforms and relay services.
