@@ -1,9 +1,7 @@
-"""AI-callable social discovery and download commands using the footage app's owners.
+"""Download a public video with social-fetch NETWORK URL [-o DIRECTORY].
 
-Examples: python3 -m social_fetch.social_cli search 'interior design' --source instagram --accounts
-          python3 -m social_fetch.social_cli account https://www.instagram.com/nasa/
-          python3 -m social_fetch.social_cli download PUBLIC_POST --namespace my-production
-          python3 -m social_fetch.social_cli status JOB_ID --namespace my-production
+Search public posts, read account/comment samples, or manage saved download jobs.
+All operations print JSON; use NETWORK --help for download options.
 """
 import argparse
 import json
@@ -11,12 +9,57 @@ from pathlib import Path
 import sys
 
 from social_fetch.client import Client, SOURCES, doctor
+from social_fetch import __version__
+from social_fetch.social_sources import DOMAINS, LABELS, download_link
+
+NETWORKS = tuple(DOMAINS)
+
+
+def _social_output(network, url, directory):
+    link = download_link(url)
+    if link.platform != network:
+        raise ValueError(f'Use a public {LABELS[network]} video post link with the {network} command.')
+    directory = directory.expanduser().absolute()
+    if directory.exists() and not directory.is_dir():
+        raise ValueError('Choose an output directory, not a filename, with -o/--output.')
+    return directory / f'{network}-{link.identity}.mp4'
+
+
+def _download(client, url, *, timeout, out=None, wait=False, image=False):
+    client._timeout(timeout)
+    suffixes = {'.jpg', '.jpeg', '.png', '.webp'} if image else {'.mp4'}
+    if out is not None:
+        out = out.expanduser()
+        if out.exists() or out.is_symlink() or out.suffix.lower() not in suffixes:
+            kind = 'image' if image else 'MP4'
+            raise ValueError(f'Choose a new {kind} output filename before downloading.')
+    result = client.download_image(url) if image else client.download(url)
+    if wait or out is not None:
+        job_id = result['id']
+        try:
+            result = client.wait(job_id, timeout=timeout)
+        except TimeoutError as error:
+            result = {**client.status(job_id), 'timed_out': True, 'message': str(error)}
+        if out is not None and result['status'] == 'ready':
+            result = client.export(job_id, out)
+    return result
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     parser.add_argument('--data-dir', type=Path, help='Persistent jobs/media directory (default: ~/.local/share/social-fetch)')
     sub = parser.add_subparsers(dest='action', required=True)
+    networks = []
+    for network in NETWORKS:
+        command = sub.add_parser(network, help=f'Download one public {LABELS[network]} video to a directory',
+                                 description=f'Download one public {LABELS[network]} video, wait, and export a checked MP4.')
+        command.add_argument('url', help='Public video post URL')
+        command.add_argument('-o', '--output', type=Path, default=Path('.'), metavar='DIRECTORY',
+                             help='Output directory (default: current directory); existing files are preserved')
+        command.add_argument('--timeout', type=float, default=900,
+                             help='Maximum wait in seconds (default: 900); saved jobs continue after a timeout')
+        networks.append(command)
     sub.add_parser('doctor', help='Check installed dependencies without a network request')
     search = sub.add_parser('search', help='Find indexed public posts or creator accounts')
     search.add_argument('query')
@@ -58,7 +101,7 @@ def main(argv=None):
     export = sub.add_parser('export', help='Copy a checked, ready job into a local production source folder')
     export.add_argument('job_id')
     export.add_argument('--out', type=Path, required=True)
-    for command in (search, account, comments, links, resource, download, image, status, export):
+    for command in (*networks, search, account, comments, links, resource, download, image, status, export):
         command.add_argument('--namespace', default='social-cli', help='Production namespace; use the same value for later status')
         command.add_argument('--save', type=Path, help='Save metadata JSON (no media tokens) to a production source ledger')
     args = parser.parse_args(argv)
@@ -68,7 +111,10 @@ def main(argv=None):
             print(json.dumps(result, indent=2))
             return 0 if result['status'] == 'ready' else 1
         client = Client(args.data_dir, namespace=args.namespace)
-        if args.action == 'search':
+        if args.action in NETWORKS:
+            out = _social_output(args.action, args.url, args.output)
+            result = _download(client, args.url, timeout=args.timeout, out=out, wait=True)
+        elif args.action == 'search':
             result = client.search(args.query, source=args.source, accounts=args.accounts, page=args.page, count=args.count)
         elif args.action == 'account':
             result = client.account(args.url, count=args.count)
@@ -93,20 +139,8 @@ def main(argv=None):
         elif args.action == 'resource':
             result = client.resource(args.url, archive=args.archive, max_bytes=args.max_mib * 1024**2, timeout=args.timeout)
         elif args.action in {'download', 'image'}:
-            client._timeout(args.timeout)
-            suffixes = {'.jpg', '.jpeg', '.png', '.webp'} if args.action == 'image' else {'.mp4'}
-            if args.out and (args.out.exists() or args.out.is_symlink() or args.out.suffix.lower() not in suffixes):
-                kind = 'image' if args.action == 'image' else 'MP4'
-                raise ValueError(f'Choose a new {kind} output filename before downloading.')
-            result = client.download_image(args.url) if args.action == 'image' else client.download(args.url)
-            if args.wait or args.out:
-                job_id = result['id']
-                try:
-                    result = client.wait(job_id, timeout=args.timeout)
-                except TimeoutError as error:
-                    result = {**client.status(job_id), 'timed_out': True, 'message': str(error)}
-                if args.out and result['status'] == 'ready':
-                    result = client.export(job_id, args.out)
+            result = _download(client, args.url, timeout=args.timeout, out=args.out,
+                               wait=args.wait, image=args.action == 'image')
         elif args.action == 'status':
             result = client.status(args.job_id)
         else:

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0 alpha — 2026-10-20
+
+- Add one-command downloads for YouTube, TikTok, Instagram, X, Facebook, Reddit,
+  Bluesky, Pinterest, Twitch clips, Snapchat Spotlight, LinkedIn and mastodon.social.
+  Each network command waits and exports a receipt-checked MP4 to `-o/--output`
+  (default: current directory), with stable filenames and overwrite protection.
+- List networks in `--help`, add `--version`, and reject mismatched network URLs
+  before downloading. Preserve existing search, download, image, job and resource
+  commands and JSON output, including reconnectable waits and failure exit codes.
+- Document pipx and pip virtual-environment installation and per-network usage.
+  Add offline CLI regressions and dated fresh-install smoke results for every
+  network in `docs/SMOKE-RESULTS.md`.
+
 ## 0.3.2 alpha — 2026-10-20
 
 - Remove application-only native catalog dispatch, browser poster integration,

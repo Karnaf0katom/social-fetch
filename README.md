@@ -1,8 +1,13 @@
 # social-fetch
 
-**Find public social posts, download a selected video, and export a verified file from a Linux VM.**
+**Download a public social video with one command per network.**
 
-Use a JSON CLI from your agent or `from social_fetch import Client` from Python.
+```bash
+social-fetch youtube 'https://www.youtube.com/watch?v=jNQXAC9IVRw' -o clips
+```
+
+Also search public posts, manage saved jobs, or use `from social_fetch import Client`
+from Python. The CLI prints JSON for humans and scripts.
 YouTube, Instagram, TikTok, X, Facebook and scoped Reddit media have measured VM
 downloads. **Status: alpha.** Supported post types and service availability have
 [documented limits](docs/SUPPORT.md#current-release-limits).
@@ -18,22 +23,85 @@ server.** See [YouTube fallback setup](#youtube-fallback-setup) before relying o
 ## Install
 
 Requires **Linux, Python 3.10+, Git, FFmpeg/ffprobe, outbound HTTPS and 9 GiB free
-disk space per active download**. On Debian/Ubuntu:
+disk space per active download**. Install the system dependencies on Debian/Ubuntu:
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y git python3-venv ffmpeg
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install 'git+https://github.com/Karnaf0katom/social-fetch.git@v0.3.2'
-social-fetch doctor
+sudo apt-get install -y git python3-venv ffmpeg pipx
 ```
 
-Releases are on [GitHub](https://github.com/Karnaf0katom/social-fetch/releases),
-with wheel/source packages and checksums. This command does not use PyPI.
-`doctor` checks installed dependencies; it does not test platform availability.
+Install the CLI in its own environment with pipx:
 
-## Try it
+```bash
+pipx install git+https://github.com/Karnaf0katom/social-fetch
+pipx ensurepath
+```
+
+Open a new terminal if `social-fetch` is not yet on your PATH. Alternatively, use
+pip in a virtual environment:
+
+```bash
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install git+https://github.com/Karnaf0katom/social-fetch
+```
+
+Check the installation and list the networks:
+
+```bash
+social-fetch --version
+social-fetch doctor
+social-fetch --help
+```
+
+These commands install from the public GitHub repository, not PyPI. Releases are
+on [GitHub](https://github.com/Karnaf0katom/social-fetch/releases), with wheel/source
+packages and checksums. `doctor` checks dependencies without testing platform
+availability. Version 0.4.0's fresh-install download checks are recorded in
+[SMOKE-RESULTS.md](docs/SMOKE-RESULTS.md).
+
+## Download by network
+
+Use one public **video post URL**, not an account or search URL. Each command waits
+for the saved job, verifies its SHA-256 during export, and saves an MP4 in `-o`
+(`--output`). The directory is created if needed; it defaults to the current
+directory. Filenames are `NETWORK-POST_ID.mp4` (some networks use a hashed ID).
+Existing files are preserved; choose another directory to export the same post
+again. A URL must match the named network.
+
+```bash
+social-fetch youtube 'https://www.youtube.com/watch?v=jNQXAC9IVRw' -o clips
+social-fetch tiktok 'https://www.tiktok.com/@patroxofficial/video/6742501081818877190' -o clips
+social-fetch instagram 'https://www.instagram.com/reel/C_bnaTAO2Ll/' -o clips
+social-fetch x 'https://x.com/buildingisgreen/status/1793226866335076588/video/2' -o clips
+social-fetch facebook 'https://www.facebook.com/watch/?v=10155529876156509' -o clips
+social-fetch reddit 'https://www.reddit.com/r/mercedes_benz/comments/1uwp60q/' -o clips
+social-fetch bluesky 'https://bsky.app/profile/bsky.app/post/3l3vgf77uco2g' -o clips
+social-fetch pinterest 'https://www.pinterest.com/pin/298856125290563650/' -o clips
+social-fetch twitch 'https://clips.twitch.tv/FaintLightGullWholeWheat' -o clips
+social-fetch snapchat 'https://www.snapchat.com/spotlight/W7_EDlXWTBiXAEEniNoMPwAAYYWtidGhudGZpAX1TKn0JAX1TKnXJAAAAAA' -o clips
+social-fetch linkedin 'https://www.linkedin.com/posts/the-mathworks_2_what-is-mathworks-cloud-center-activity-7151241570371948544-4Gu7/' -o clips
+social-fetch mastodon 'https://mastodon.social/@mastodon/116839714185151652' -o clips
+```
+
+These public examples can become unavailable. Twitch accepts clips, Snapchat
+accepts Spotlight posts, Pinterest requires video pins, and Mastodon is limited
+to mastodon.social. Reddit's network command downloads video; use the existing
+`image URL --out image.jpg` command for native single images. See the platform
+limits below and `social-fetch NETWORK --help` for options.
+
+Commands return nonzero on failure or timeout. `--timeout 900` is the default wait
+limit in seconds; timed-out jobs keep running. The JSON includes the job ID for
+`status` and `export`. Network commands also accept `--namespace` and `--save`.
+
+Video and audio are copied into MP4 without re-encoding, up to an available 1080p
+rendition. Lower source quality is preserved. Audio selection prefers tracks
+labeled original and rejects labeled dubbed tracks; an empty label leaves
+original-language identity unknown. URL timestamps do not trim the source.
+
+## Existing commands
+
+All previous subcommands and options remain available:
 
 ```bash
 social-fetch search 'space launch' --source youtube --count 3
@@ -41,15 +109,10 @@ social-fetch search 'NASA' --source instagram --accounts --count 3
 social-fetch download 'https://www.youtube.com/watch?v=jNQXAC9IVRw' --out clip.mp4
 ```
 
-All commands print JSON. `download --out` waits for the saved job, verifies its
-SHA-256 while exporting, and refuses to overwrite an existing file. Search
-returns indexed candidates; a result can be unavailable or contain no video.
-No account is downloaded in bulk.
-
-Video and audio are copied into MP4 without re-encoding, up to an available 1080p
-rendition. Lower source quality is preserved. Audio selection prefers tracks
-labeled original and rejects labeled dubbed tracks; an empty label leaves
-original-language identity unknown. URL timestamps do not trim the source.
+`download URL` queues a job and returns immediately. `download --wait` waits;
+`download --out clip.mp4` waits and exports to an explicit filename. Search returns
+indexed candidates; a result can be unavailable or contain no video. No account
+is downloaded in bulk.
 
 ## Python API
 

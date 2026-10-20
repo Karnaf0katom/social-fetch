@@ -27,6 +27,14 @@ The independently operated relay servers are not included in this repository.
 The visual Footage interface, additional platforms and PyPI distribution are
 separate from this GitHub alpha release.
 
+## Per-network CLI — 0.4.0
+
+Version 0.4.0 adds named download commands for all 12 supported networks and keeps
+the existing CLI/API routes. [Fresh-install smoke results](SMOKE-RESULTS.md) record
+real downloads through those commands with per-network outcomes, separately
+from the historical checks below. A successful sample establishes that sample's behavior
+on the recorded date; it does not extend the supported post types.
+
 ## Standalone package cleanup — 0.3.2
 
 The standalone export omits native application catalog dispatch, private browser
