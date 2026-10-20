@@ -191,6 +191,8 @@ def candidate(row: dict[str, Any], *, provider: str, kind: str = 'video') -> dic
     heading = text(row.get('title'), 240)
     if social and kind == 'account' and re.fullmatch(r'(?i)link to (?:www\.)?[a-z0-9.-]+\.[a-z]{2,}', heading):
         heading = f'@{social.handle} on {source}'
+    from social_fetch.social_resources import discover_resources
+    linked = discover_resources(row, source_url=canonical, limit=20)
     return {
         'id': hashlib.sha256(canonical.encode()).hexdigest()[:24],
         'url': canonical,
@@ -206,6 +208,8 @@ def candidate(row: dict[str, Any], *, provider: str, kind: str = 'video') -> dic
         'published': text(row.get('page_age') or row.get('date') or row.get('published'), 80),
         'preview': preview,
         'discovered_by': [provider],
+        'linked_resources': linked['resources'],
+        'resource_notice': linked['notice'] if linked['count'] else None,
     }
 
 

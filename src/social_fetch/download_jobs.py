@@ -37,6 +37,11 @@ def save(path, value):
     pending.replace(path)
 
 
+def _final_file(folder, job):
+    suffix = '.image' if job.get('media_kind') == 'image' else '.mp4'
+    return folder / (job['video_id'] + suffix)
+
+
 class DownloadJobs:
     def __init__(self, root=None):
         self.root = Path(root or os.environ.get('FOOTAGE_DOWNLOAD_ROOT', VIDEO_ROOT / 'out/footage-downloads')).resolve()
@@ -71,9 +76,9 @@ class DownloadJobs:
                        message='Download was interrupted. Try again to resume.', updated_at=time.time())
             save(folder / 'job.json', job)
         if job['status'] == 'ready':
-            final = folder / (job['video_id'] + '.mp4')
+            final = _final_file(folder, job)
             if not final.is_file() or final.stat().st_size != job.get('bytes'):
-                job.update(status='failed', message='The saved MP4 is missing or changed. Try this download again.', updated_at=time.time())
+                job.update(status='failed', message='The saved image is missing or changed. Try this download again.' if job.get('media_kind') == 'image' else 'The saved MP4 is missing or changed. Try this download again.', updated_at=time.time())
                 save(folder / 'job.json', job)
         # Older receipts predate the library. Reuse their measured metadata;
         # listing files never reacquires a source or hashes a large MP4.
@@ -86,7 +91,7 @@ class DownloadJobs:
         return job
 
     def public(self, job):
-        return {k: job[k] for k in ('id', 'source_url', 'platform', 'title', 'status', 'message', 'created_at', 'updated_at', 'bytes', 'width', 'height', 'duration', 'sha256', 'audio', 'route', 'route_attempts', 'error_code', 'failure_stage') if k in job}
+        return {k: job[k] for k in ('id', 'source_url', 'platform', 'title', 'status', 'message', 'created_at', 'updated_at', 'bytes', 'width', 'height', 'duration', 'sha256', 'audio', 'route', 'route_attempts', 'media_kind', 'image_format', 'decode_sample_frames', 'error_code', 'failure_stage') if k in job}
 
     def _jobs(self):
         rows = []
@@ -157,15 +162,19 @@ class DownloadJobs:
         with self.lock():
             folder = self.folder(namespace, job_id)
             job = self.read(folder)
-            path = folder / (job['video_id'] + '.mp4')
+            path = _final_file(folder, job)
             if job['status'] != 'ready' or not path.is_file() or path.stat().st_size != job['bytes']:
                 raise FileNotFoundError('The completed download is not available')
             return path
 
-    def submit(self, namespace, url, *, queue=False, title=None):
+    def submit(self, namespace, url, *, queue=False, title=None, media_kind='video'):
         link = download_link(url)
+        if media_kind not in {'video', 'image'} or (media_kind == 'image' and link.platform != 'reddit'):
+            raise ValueError('Native image downloads currently accept selected Reddit posts only')
         normalized = link.url
         identity = normalized if link.platform == 'youtube' else link.platform + ':' + link.identity
+        if media_kind == 'image':
+            identity += ':image'
         job_id = hashlib.sha256(identity.encode()).hexdigest()[:24]
         folder = self.folder(namespace, job_id)
         with self.lock():
@@ -179,7 +188,7 @@ class DownloadJobs:
                     save(folder / 'job.json', existing)
                 if existing['status'] in PENDING:
                     return self.public(existing)
-                final = folder / (existing['video_id'] + '.mp4')
+                final = _final_file(folder, existing)
                 if existing['status'] == 'ready' and final.is_file() and final.stat().st_size == existing['bytes']:
                     return self.public(existing)
                 if existing.get('cpu_job_id'):
@@ -208,6 +217,8 @@ class DownloadJobs:
             job = {'id': job_id, 'video_id': link.identity, 'source_url': normalized, 'platform': link.platform,
                    'status': 'waiting' if queue else 'queued', 'message': 'Waiting for a download slot' if queue else 'Download queued',
                    'created_at': existing['created_at'] if existing else now, 'updated_at': now}
+            if media_kind == 'image':
+                job['media_kind'] = 'image'
             if resume_cpu:
                 job['cpu_job_id'] = resume_cpu
             if title:
@@ -245,15 +256,19 @@ class DownloadJobs:
         try:
             job = update(pid=os.getpid(), message='Preparing source download')
             platform = job.get('platform', 'youtube')
+            image = job.get('media_kind') == 'image'
             command = ([sys.executable, str(VIDEO_ROOT / 'social_fetch/youtube_web.py'), job['source_url'], '--out', str(folder)]
                        if platform == 'youtube' else [sys.executable, '-m', 'social_fetch.social_download',
                        job['source_url'], '--out', str(folder), '--video-id', job['video_id']])
+            if image:
+                command = [sys.executable, '-m', 'social_fetch.reddit_web', job['source_url'],
+                           '--out', str(folder), '--video-id', job['video_id']]
             cpu_job = job.get('cpu_job_id')
             if not cpu_job:
                 update(status='downloading', message='Downloading original video and audio' if platform == 'youtube' else 'Downloading selected public post')
                 subprocess.run([*command, '--download-only'], cwd=VIDEO_ROOT, check=True, timeout=1800, stdin=subprocess.DEVNULL)
                 stage = 'assembly'
-                update(status='assembling', message='Waiting for video assembly and media checks')
+                update(status='assembling', message='Waiting for image checks' if image else 'Waiting for video assembly and media checks')
                 # This checkout must use its shared CPU owner. An independent
                 # installation has no private .agent dependency; its two-worker
                 # admission above bounds the existing FFmpeg finalizer instead.
@@ -268,7 +283,7 @@ class DownloadJobs:
                     update(cpu_job_id=cpu_job)
             if cpu_job:
                 stage = 'assembly'
-                update(status='assembling', message='Waiting for video assembly and media checks')
+                update(status='assembling', message='Waiting for image checks' if image else 'Waiting for video assembly and media checks')
                 while True:
                     result = subprocess.run([str(CPU_SLOT), 'wait', cpu_job, '--timeout-seconds', '60'],
                                             capture_output=True, text=True, timeout=75, stdin=subprocess.DEVNULL)
@@ -278,16 +293,31 @@ class DownloadJobs:
                 raise RuntimeError('Video assembly failed')
             stage = 'verification'
             receipt = json.loads((folder / (job['video_id'] + '.receipt.json')).read_text())
-            final = folder / (job['video_id'] + '.mp4')
+            final = _final_file(folder, job)
             if (not receipt['downloaded'] or final.stat().st_size != receipt['bytes']
-                    or platform != 'youtube' and receipt.get('source_url') != job['source_url']):
+                    or receipt.get('source_url') != job['source_url']
+                    or not re.fullmatch(r'[a-f0-9]{64}', str(receipt.get('sha256', '')))
+                    or (image and (receipt.get('media_kind') != 'image'
+                                   or receipt.get('image_format') not in {'jpeg', 'png', 'webp'}
+                                   or receipt.get('decode_sample_frames') != 1))):
                 raise RuntimeError('Completed file did not pass its receipt check')
-            update(status='ready', message='MP4 ready', **{k: receipt[k] for k in ('bytes', 'height', 'duration', 'width', 'sha256', 'audio', 'route', 'route_attempts') if k in receipt})
+            digest = hashlib.sha256()
+            with final.open('rb') as handle:
+                for block in iter(lambda: handle.read(1024 * 1024), b''):
+                    digest.update(block)
+            if digest.hexdigest() != receipt['sha256']:
+                raise RuntimeError('Completed file did not pass its receipt check')
+            update(status='ready', message='Image ready' if image else 'MP4 ready',
+                   **{k: receipt[k] for k in ('bytes', 'height', 'duration', 'width', 'sha256', 'audio',
+                       'route', 'route_attempts', 'media_kind', 'image_format', 'decode_sample_frames') if k in receipt})
         except Exception as error:
             # Keep service tokens, subprocess output and host paths out of the public response.
             code = 'timeout' if isinstance(error, subprocess.TimeoutExpired) else stage + '_failed'
             message = ('Public source acquisition failed. The post may require login, be unavailable, or have no downloadable video.'
                        if stage == 'acquisition' else 'Video assembly or media verification failed. Reconnect to the saved job or retry the same source.')
+            if job.get('media_kind') == 'image':
+                message = ('Public Reddit image acquisition failed. Use an available native single-image post.'
+                           if stage == 'acquisition' else 'Image verification failed. Check the saved job before retrying.')
             diagnostics = {}
             attempts_path = folder / 'route-attempts.json'
             if stage == 'acquisition' and attempts_path.is_file() and attempts_path.stat().st_size <= 16384:

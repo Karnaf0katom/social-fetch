@@ -12,7 +12,7 @@ import time
 
 from social_fetch.download_jobs import DownloadJobs, PENDING
 from social_fetch.social_accounts import account_search
-from social_fetch.social_sources import DOMAINS
+from social_fetch.social_sources import DOMAINS, social_link
 from social_fetch.web_search import FootageSearch
 
 SOURCES = ('social', *DOMAINS)
@@ -62,9 +62,58 @@ class Client:
     def account(self, url, *, count=5):
         return account_search.browse(url, self._discovery(), count=count, namespace=self.namespace, include_posters=False)
 
+    def comments(self, url, *, count=None):
+        """Read a bounded public sample: up to 20 Reddit or 100 Instagram comments."""
+        link = social_link(url)
+        if link is None or link.platform not in {'instagram', 'reddit'} or link.kind == 'account':
+            raise ValueError('Use a public Instagram or Reddit post link.')
+        if link.platform == 'reddit':
+            from social_fetch.reddit_web import read_comments
+            return read_comments(link.url, limit=5 if count is None else count)
+        from social_fetch.instagram_comments import read_comments
+        return read_comments(link.url, limit=50 if count is None else count)
+
+    def resource(self, url, *, archive=False, max_bytes=20 * 1024**2, timeout=60):
+        """Save one linked file/page and readable text with an integrity receipt."""
+        from social_fetch.social_resources import fetch_resource
+        return fetch_resource(url, self.jobs.root, namespace=self.namespace,
+                              archive=archive, max_bytes=max_bytes, timeout=timeout)
+
+    def resources(self, payload, *, source_url=None, download=False, limit=20):
+        """Find references in text/JSON from any platform; optionally save content.
+
+        One call follows at most 20 selected links, 40 MiB and 180 seconds in total.
+        It never recursively follows references found inside a downloaded page.
+        """
+        from social_fetch.social_resources import discover_resources, MAX_BYTES
+        result = discover_resources(payload, source_url=source_url, limit=limit)
+        if download:
+            deadline, remaining = time.monotonic() + 180, MAX_BYTES * 2
+            rows = []
+            for index, item in enumerate(result['resources']):
+                if index >= 20 or remaining <= 0 or time.monotonic() >= deadline:
+                    rows.append({**item, 'status': 'limit_reached', 'message': 'The bounded download budget was exhausted.'})
+                    continue
+                saved = self.resource(item['url'], max_bytes=min(MAX_BYTES, remaining),
+                                      timeout=min(60, max(0.001, deadline - time.monotonic())))
+                remaining -= saved.get('bytes', 0)
+                rows.append({**saved, 'occurrences': item['occurrences']})
+            result['resources'] = rows
+            ready = sum(item['status'] == 'ready' for item in rows)
+            result.update(status='ready' if ready == len(rows) else 'partial' if ready else 'unavailable',
+                          downloaded_count=ready,
+                          readable_count=sum(item.get('text_status') == 'extracted' for item in rows),
+                          notice=f'Found {len(rows)} linked resources; saved {ready}.')
+        return result
+
     def download(self, url, *, wait=False, timeout=900):
         self._timeout(timeout)
         job = self.jobs.submit(self.namespace, url)
+        return self.wait(job['id'], timeout=timeout) if wait else job
+
+    def download_image(self, url, *, wait=False, timeout=900):
+        self._timeout(timeout)
+        job = self.jobs.submit(self.namespace, url, media_kind='image')
         return self.wait(job['id'], timeout=timeout) if wait else job
 
     def status(self, job_id):
@@ -91,7 +140,11 @@ class Client:
         job = self.status(job_id)
         source = self.jobs.file(self.namespace, job_id)
         out = Path(out).expanduser().absolute()
-        if out.suffix.lower() != '.mp4':
+        if job.get('media_kind') == 'image':
+            suffixes = {'jpeg': {'.jpg', '.jpeg'}, 'png': {'.png'}, 'webp': {'.webp'}}
+            if out.suffix.lower() not in suffixes.get(job.get('image_format'), set()):
+                raise ValueError('Choose a new image filename matching its recorded format.')
+        elif out.suffix.lower() != '.mp4':
             raise ValueError('Choose an MP4 output filename.')
         if out.exists() or out.is_symlink():
             raise ValueError('The export destination already exists. Choose another filename.')
@@ -109,7 +162,8 @@ class Client:
                         digest.update(block)
                         size += len(block)
             if size != job['bytes'] or digest.hexdigest() != job['sha256']:
-                raise ValueError('The saved MP4 does not match its integrity receipt. Download it again.')
+                kind = 'image' if job.get('media_kind') == 'image' else 'MP4'
+                raise ValueError(f'The saved {kind} does not match its integrity receipt. Download it again.')
             # An exclusive link prevents overwriting a destination created during copying.
             os.link(pending, out)
         finally:

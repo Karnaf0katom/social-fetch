@@ -49,6 +49,7 @@ class AccountSearch:
                                 or not any(m.get('type') in {'video', 'gifv'} for m in post.get('media_attachments', []))):
                             continue
                         item = candidate({'url': source.url, 'title': f'Video from @{link.handle}',
+                                          'description': post.get('content', ''),
                                           'uploader': link.handle}, provider='mastodon-public-api')
                         if item:
                             rows.append(item)

@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.3.1 alpha — 2026-10-20
+
+- Integrate SSSTik selected-post failover, FixupX attachment-preserving embeds and
+  Facebook selected progressive playback. Bind TikTok/Facebook shares to native
+  posts, recover stale TikTok authors only from the same native video, and export
+  the focused regressions with the public package.
+- Record 22 fresh integrated-worker downloads, ten working platform alternatives,
+  LinkedIn public-page failover and YouTube assigned-relay switching. Preserve the
+  unavailable Reddit native-JSON alternative and unconfigured Cobalt limit.
+- Integrate read-only Reddit search, bounded current comments, native single-image
+  downloads and merged native video with required audio. Image jobs share the
+  existing queue, receipt verification and checked export. Preserve Instagram
+  comments and linked resources in the shared CLI and Python API.
+- Add linked-resource detection and bounded public GitHub, Docs/Drive, file and
+  documentation retrieval with readable-text sidecars and integrity receipts.
+- Clarify account-sample availability, unknown audio-language identity when relay
+  labels are absent, and the external-service boundaries of the MIT client.
+- Record a fresh landscape YouTube HD download at its measured 2048 x 872
+  dimensions, a fresh Instagram post/account sample, indexed discovery and public
+  linked-resource retrieval. Preserve unavailable account/carousel/timeline limits.
+- Verify the completed MP4's SHA-256 and selected source against its finalizer
+  receipt before marking a worker job ready, including YouTube jobs. Missing
+  hashes, wrong-post receipts and same-size corruption fail verification.
+- Add regressions for receipt mismatches, interrupted-worker retry and waiting
+  queue limits, and include maintained search boundary regressions in the public
+  package. Two application-only catalog cases stay in the maintained suite;
+  the standalone source scope and experimental route limits are unchanged.
+- Record earlier installed-worker failover for six alternatives, a 1080 x 1920
+  YouTube Short, headline samples, selected X attachment order and one Pinterest
+  discovery/download pair. Retain historical failed samples and the remaining
+  mixed Instagram carousel and other unverified format limits.
+
 ## 0.3.0 alpha — 2026-10-18
 
 - Add one explicit acquisition alternative for each selectable social source.

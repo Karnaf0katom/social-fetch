@@ -66,6 +66,36 @@ def test_exhausted_routes_never_receipt_stale_media(tmp_path, monkeypatch):
     assert len(json.loads((tmp_path / 'route-attempts.json').read_text())) == 2
 
 
+@pytest.mark.parametrize('failure', [TimeoutError, ConnectionResetError])
+def test_interrupted_transfer_cleans_partial_bytes_before_automatic_fallback(tmp_path, monkeypatch, failure):
+    class BrokenResponse(io.BytesIO):
+        status = 200
+        headers = {'Content-Length': str(len(VIDEO) * 2)}
+
+        def read(self, size=-1):
+            if self.tell():
+                raise failure('private delivery token')
+            return super().read(size)
+
+    def primary(link, folder):
+        return download.progressive_transfer(lambda _: BrokenResponse(VIDEO), 'https://video.twimg.com/selected.mp4', folder)
+
+    def alternative(link, folder):
+        assert not list(tmp_path.glob('**/*.part'))
+        target = folder / 'raw.mp4'
+        target.write_bytes(VIDEO)
+        return target
+
+    monkeypatch.setattr(download, 'primary_download', primary)
+    monkeypatch.setitem(fallback.FALLBACKS, 'x', ('fxtwitter', alternative))
+    download.acquire(X_URL, tmp_path)
+    receipt = json.loads((tmp_path / 'acquisition.json').read_text())
+    assert [a['status'] for a in receipt['route_attempts']] == ['unavailable', 'acquired']
+    assert (tmp_path / 'raw.mp4').read_bytes() == VIDEO
+    assert 'private delivery token' not in json.dumps(receipt)
+    assert not list(tmp_path.glob('attempt-*')) and not list(tmp_path.glob('**/*.part'))
+
+
 @pytest.mark.parametrize('platform,url', [
     ('x', 'https://video.twimg.com.evil.test/video.mp4'),
     ('facebook', 'https://www.facebook.com/fake.mp4'),

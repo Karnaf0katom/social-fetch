@@ -20,8 +20,9 @@ class ProviderUnavailable(ValueError):
 HOSTS = {
     'instagram': ('instagram.com', 'cdninstagram.com', 'fbcdn.net'),
     'tiktok': ('tiktok.com', 'tiktokcdn.com', 'tiktokcdn-us.com', 'tiktokcdn-eu.com',
-               'tiktokv.com', 'byteoversea.com', 'ibytedtos.com', 'v19-webapp-prime.tiktok.com'),
-    'x': ('api.fxtwitter.com', 'video.twimg.com'),
+               'tiktokv.com', 'byteoversea.com', 'ibytedtos.com', 'v19-webapp-prime.tiktok.com',
+               'ssstik.io', 'tikcdn.io'),
+    'x': ('api.fxtwitter.com', 'fixupx.com', 'video.twimg.com'),
     'facebook': ('facebook.com', 'www.facebook.com', 'fbcdn.net'),
     'reddit': ('www.reddit.com', 'v.redd.it'),
     'pinterest': ('www.pinterest.com', 'pinimg.com'),
@@ -34,7 +35,7 @@ HOSTS = {
 }
 DELIVERY = {
     'instagram': ('cdninstagram.com', 'fbcdn.net'),
-    'tiktok': HOSTS['tiktok'][1:], 'x': ('video.twimg.com',),
+    'tiktok': tuple(h for h in HOSTS['tiktok'][1:] if h != 'ssstik.io'), 'x': ('video.twimg.com',),
     'facebook': ('fbcdn.net',), 'reddit': ('v.redd.it',),
     'pinterest': ('pinimg.com',), 'twitch': HOSTS['twitch'][1:],
     'snapchat': ('sc-cdn.net',), 'linkedin': ('licdn.com',),
@@ -118,6 +119,8 @@ class PostPage(HTMLParser):
 
 
 def page_download(link, folder):
+    if link.platform == 'facebook':
+        return facebook_download(link, folder)
     page = PostPage(document(link.platform, link.url))
     if not page.urls:
         raise ProviderUnavailable('The public page has no selected-post identity')
@@ -134,6 +137,53 @@ def page_download(link, folder):
     if not urls:
         raise ProviderUnavailable('The public post has no progressive MP4')
     return transfer(link, urls[0], folder)
+
+
+def facebook_download(link, folder):
+    from social_fetch.social_download import progressive_transfer, resolve_selected_post
+    link = resolve_selected_post(link)
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+               '(KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+               'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+               'Accept-Language': 'en-US,en;q=0.5', 'Sec-Fetch-Mode': 'navigate'}
+    page = PostPage(document('facebook', link.url, headers=headers))
+    if not page.urls:
+        raise ProviderUnavailable('The public page has no selected-post identity')
+    if not all(same_post(link, url) for url in page.urls):
+        raise ValueError('Fallback returned another post')
+    urls = []
+    for block in page.scripts.get('application/json', []):
+        try:
+            stack = [json.loads(block)]
+        except json.JSONDecodeError:
+            continue
+        while stack:
+            node = stack.pop()
+            if isinstance(node, list):
+                stack.extend(v for v in node if isinstance(v, (dict, list)))
+                continue
+            if not isinstance(node, dict):
+                continue
+            if (str(node.get('id')) == link.identity and (node.get('__typename') == 'Video'
+                    or isinstance(node.get('videoDeliveryLegacyFields'), dict))):
+                legacy = node.get('videoDeliveryLegacyFields') or node
+                if legacy.get('id') is not None and str(legacy['id']) != link.identity:
+                    raise ValueError('Facebook media returned another post')
+                urls.extend(legacy[key] for key in ('browser_native_hd_url', 'playable_url_quality_hd',
+                    'browser_native_sd_url', 'playable_url') if isinstance(legacy.get(key), str) and legacy[key])
+                fragment = node.get('videoDeliveryResponseFragment') or {}
+                result = fragment.get('videoDeliveryResponseResult') or {}
+                for fmt in result.get('progressive_urls') or []:
+                    if isinstance(fmt, dict) and isinstance(fmt.get('progressive_url'), str):
+                        urls.append(fmt['progressive_url'])
+            stack.extend(v for v in node.values() if isinstance(v, (dict, list)))
+    if not urls:
+        urls = [u for u in page.videos if urlsplit(u).path.lower().endswith('.mp4')]
+    if not urls:
+        raise ProviderUnavailable('The selected Facebook video has no progressive MP4')
+    url = checked_url('facebook', urls[0], media=True)
+    return progressive_transfer(lambda value: request('facebook', value, media=True,
+        headers={'User-Agent': 'facebookexternalhit/1.1'}), url, folder)
 
 
 def pinterest_download(link, folder):
@@ -197,6 +247,44 @@ def twitch_download(link, folder):
     return transfer(link, url, folder)
 
 
+def fixupx_download(link, folder):
+    from social_fetch.social_sources import social_link
+    post_id = link.identity.split('-video', 1)[0]
+    def selected_url(url):
+        checked_url('x', url)
+        if urlsplit(url).hostname != 'fixupx.com':
+            raise ValueError('Unexpected X embed redirect host')
+        actual = social_link(url.replace('https://fixupx.com/', 'https://x.com/', 1))
+        if actual is None or actual.kind != 'video' or actual.identity != link.identity:
+            raise ValueError('X embed redirected to another post or attachment')
+        return url
+    class Redirects(HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            selected_url(newurl)
+            return super().redirect_request(req, fp, code, msg, headers, newurl)
+    url = selected_url(link.url.replace('https://x.com/', 'https://fixupx.com/', 1))
+    with build_opener(Redirects()).open(Request(url, headers={
+            'User-Agent': 'Twitterbot/1.0', 'Accept': 'text/html'}), timeout=20) as response:
+        raw = response.read(2 * 1024**2 + 1)
+    if len(raw) > 2 * 1024**2:
+        raise ValueError('Oversized X embed metadata')
+    page = PostPage(raw.decode('utf-8'))
+    if not page.urls:
+        raise ProviderUnavailable('The X embed has no selected-post identity')
+    if any(urlsplit(value).fragment for value in page.urls):
+        raise ValueError('Unexpected X post identity fragment')
+    identities = [social_link(value) for value in page.urls]
+    if any(row is None or row.platform != 'x' or row.kind != 'video'
+           or row.identity not in {post_id, link.identity} for row in identities):
+        raise ValueError('X fallback returned another post')
+    urls = [checked_url('x', value, media=True) for value in page.videos]
+    if not urls or any(not urlsplit(value).path.lower().endswith('.mp4') for value in urls):
+        raise ProviderUnavailable('The selected X attachment has no progressive MP4')
+    if len(set(urls)) != 1:
+        raise ValueError('The X embed returned ambiguous selected media')
+    return transfer(link, urls[0], folder)
+
+
 def x_download(link, folder):
     post_id = link.identity.split('-video', 1)[0]
     data = json.loads(document('x', 'https://api.fxtwitter.com/status/' + post_id))
@@ -229,7 +317,7 @@ def reddit_download(link, folder):
     post = posts[0].get('data', {}) if posts else {}
     if post.get('id') != link.identity:
         raise ValueError('Reddit fallback returned another post')
-    if post.get('crosspost_parent') or not post.get('is_video'):
+    if post.get('crosspost_parent') or post.get('crosspost_parent_list') or not post.get('is_video'):
         raise ProviderUnavailable('Only the selected native Reddit video is supported')
     video = (post.get('secure_media') or {}).get('reddit_video') or {}
     if video.get('has_audio') is not False:
@@ -284,6 +372,66 @@ def bluesky_download(link, folder):
         urlencode({'did': did, 'cid': cid}), folder, expected_size=size)
 
 
+def ssstik_download(link, folder):
+    from http.cookiejar import CookieJar
+    from urllib.request import HTTPCookieProcessor
+    from social_fetch.social_download import progressive_transfer, resolve_selected_post, tiktok_full_post
+    link = resolve_selected_post(link)
+    post_id = link.identity
+    ua = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+          '(KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
+    class Redirects(HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            if urlsplit(newurl).hostname != 'ssstik.io':
+                raise ValueError('Unexpected TikTok form redirect')
+            checked_url('tiktok', newurl)
+            return super().redirect_request(req, fp, code, msg, headers, newurl)
+    opener = build_opener(Redirects(), HTTPCookieProcessor(CookieJar()))
+    def form_request(url, data=None):
+        headers = {'User-Agent': ua, 'Origin': 'https://ssstik.io',
+                   'Referer': 'https://ssstik.io/en', 'HX-Current-URL': 'https://ssstik.io/en',
+                   'HX-Request': 'true', 'HX-Target': 'target', 'HX-Trigger': '_gcaptcha_pt'}
+        if data is not None:
+            headers['Content-Type'] = 'application/x-www-form-urlencoded'
+        with opener.open(Request(checked_url('tiktok', url), data=data, headers=headers), timeout=20) as response:
+            raw = response.read(2 * 1024**2 + 1)
+        if len(raw) > 2 * 1024**2:
+            raise ValueError('Oversized TikTok form response')
+        return raw.decode('utf-8')
+    urls = []
+    class Links(HTMLParser):
+        def handle_starttag(self, tag, attrs):
+            if tag == 'a':
+                url = dict(attrs).get('href', '')
+                match = re.fullmatch(r'/ssstik/(\d{10,25})', urlsplit(url).path)
+                if match:
+                    checked_url('tiktok', url, media=True)
+                    if urlsplit(url).hostname != 'tikcdn.io' or match[1] != post_id:
+                        raise ValueError('TikTok fallback returned another post')
+                    urls.append(url)
+    for attempt in range(2):
+        page = form_request('https://ssstik.io/en')
+        token = re.search(r"""(?:s_tt\s*=|tt\s*:)\s*['"]([A-Za-z0-9_=+/-]+)['"]""", page)
+        if token is None:
+            raise ProviderUnavailable('The public TikTok form is unavailable')
+        body = urlencode({'id': link.url, 'locale': 'en', 'tt': token[1]}).encode()
+        result = form_request('https://ssstik.io/abc?url=dl', body)
+        Links().feed(result)
+        if urls:
+            break
+        if attempt == 0:
+            recovered = tiktok_full_post(link)
+            if recovered.url == link.url:
+                break
+            link = recovered
+        else:
+            break
+    if not urls:
+        raise ProviderUnavailable('The TikTok form has no selected-post video')
+    return progressive_transfer(lambda url: request('tiktok', url, media=True,
+        headers={'User-Agent': ua, 'Referer': 'https://ssstik.io/'}), urls[0], folder)
+
+
 def extractor_download(link, folder):
     from social_fetch.social_download import progressive_download
     return progressive_download(link, folder)
@@ -291,8 +439,8 @@ def extractor_download(link, folder):
 
 FALLBACKS = {
     'instagram': ('instagram_extractor', extractor_download),
-    'tiktok': ('tiktok_extractor', extractor_download),
-    'x': ('fxtwitter', x_download), 'facebook': ('facebook_public_page', page_download),
+    'tiktok': ('ssstik', ssstik_download),
+    'x': ('fixupx', fixupx_download), 'facebook': ('facebook_public_page', page_download),
     'reddit': ('reddit_public_json', reddit_download),
     'pinterest': ('pinterest_public_api', pinterest_download),
     'twitch': ('twitch_public_graphql', twitch_download),

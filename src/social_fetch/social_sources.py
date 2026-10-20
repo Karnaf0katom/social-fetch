@@ -111,8 +111,8 @@ def social_link(value: str) -> SocialLink | None:
                 handle = match[1].lower()
                 return SocialLink('instagram', f'https://www.instagram.com/{handle}/', handle, 'account', handle)
         if host in ('tiktok.com', 'm.tiktok.com'):
-            match = re.fullmatch(r'/@([A-Za-z0-9._]{1,30})(?:/video/(\d{10,25}))?', path)
-            if match:
+            match = re.fullmatch(r'/@([A-Za-z0-9._]{0,30})(?:/video/(\d{10,25}))?', path)
+            if match and (match[1] or match[2]):
                 handle, identity = match.groups()
                 url = f'https://www.tiktok.com/@{handle}'
                 return SocialLink('tiktok', url + ('/video/' + identity if identity else ''), identity or handle.lower(),

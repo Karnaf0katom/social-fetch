@@ -16,11 +16,11 @@ import shutil
 import subprocess
 import sys
 import time
-from urllib.error import URLError
-from urllib.parse import urlencode, urlsplit
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode, urljoin, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
-from social_fetch.social_sources import download_link
+from social_fetch.social_sources import download_link, social_link
 from social_fetch.social_fallbacks import FALLBACKS, ProviderUnavailable
 
 MAX_BYTES = 512 * 1024**2
@@ -58,6 +58,8 @@ def delivery_request(platform, url):
 
 def progressive_download(link, folder):
     """Use one attributed extractor for metadata, then validate and stream the MP4."""
+    if link.platform == 'tiktok':
+        link = resolve_selected_post(link)
     executable = shutil.which('yt-dlp')
     runner = [executable] if executable else [sys.executable, '-m', 'yt_dlp'] if importlib.util.find_spec('yt_dlp') else None
     if not runner:
@@ -75,11 +77,6 @@ def progressive_download(link, folder):
         data = json.loads(metadata.read_text())
         expected_id = link.url.rsplit('/', 1)[1] if link.platform in {'twitch', 'snapchat'} else link.identity
         actual_id = data.get('display_id') if link.platform == 'twitch' else data.get('id')
-        if link.platform == 'tiktok' and not link.identity.isdigit():
-            # A short share URL has no numeric post ID until the selected extractor resolves it.
-            if not re.fullmatch(r'\d{10,25}', str(actual_id)):
-                raise ValueError('Unexpected resolved TikTok identity')
-            expected_id = str(actual_id)
         if link.platform == 'instagram' and data.get('_type') == 'playlist':
             if str(actual_id) != expected_id or data.get('extractor_key') != 'Instagram':
                 raise ValueError('Extractor returned another post')
@@ -263,7 +260,90 @@ def tikwm_request(url, data=None):
                  **({'Content-Type': 'application/x-www-form-urlencoded'} if data else {})}), timeout=30)
 
 
+def resolve_selected_post(link):
+    """Bind native TikTok/Facebook share redirects before trusting a provider ID."""
+    if link.platform not in {'tiktok', 'facebook'}:
+        return link
+    def canonical(row):
+        path = urlsplit(row.url).path.rstrip('/')
+        return row.identity.isdigit() and (
+            row.platform == 'facebook' and path == '/watch' or
+            row.platform == 'tiktok' and re.fullmatch(r'/@[^/]*/video/\d{10,25}', path))
+    if canonical(link):
+        return link
+    class NoFollow(HTTPRedirectHandler):
+        def redirect_request(self, *args, **kwargs):
+            return None
+    opener = build_opener(NoFollow())
+    url = link.url
+    for _ in range(6):
+        actual = social_link(url)
+        if (actual is None or actual.platform != link.platform or actual.kind != 'video'
+                or urlsplit(url).fragment):
+            raise ValueError('Share redirect escaped its selected platform post')
+        if canonical(actual):
+            return actual
+        try:
+            with opener.open(Request(actual.url, headers={'User-Agent': 'Mozilla/5.0'}), timeout=15) as response:
+                raw = response.read(2 * 1024**2 + 1)
+        except HTTPError as error:
+            if error.code in {301, 302, 303, 307, 308} and error.headers.get('Location'):
+                url = urljoin(actual.url, error.headers['Location'])
+                error.close()
+                continue
+            raise
+        if len(raw) > 2 * 1024**2:
+            raise ValueError('Oversized selected-post redirect page')
+        from social_fetch.social_fallbacks import PostPage
+        page = PostPage(raw.decode('utf-8'))
+        identities = [social_link(value) for value in page.urls]
+        if identities:
+            if any(row is None or row.platform != link.platform or row.kind != 'video'
+                   or not canonical(row) for row in identities):
+                raise ValueError('Share page returned an unexpected post identity')
+            if len({row.identity for row in identities}) != 1:
+                raise ValueError('Share page returned conflicting post identities')
+            return identities[0]
+        raise ProviderUnavailable('The public share has no canonical post binding')
+    raise ProviderUnavailable('The public share exceeded the redirect bound')
+
+
+def tiktok_full_post(link):
+    """Recover an author only from the selected native video's own metadata."""
+    if link.platform != 'tiktok' or not link.identity.isdigit():
+        raise ValueError('Unbound TikTok post')
+    class Redirects(HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            actual = social_link(newurl)
+            if (actual is None or actual.platform != 'tiktok' or actual.kind != 'video'
+                    or actual.identity != link.identity or '/video/' not in actual.url
+                    or urlsplit(newurl).fragment):
+                raise ValueError('TikTok author lookup redirected to another post')
+            return super().redirect_request(req, fp, code, msg, headers, newurl)
+    with build_opener(Redirects()).open(Request(link.url,
+            headers={'User-Agent': 'Mozilla/5.0'}), timeout=15) as response:
+        raw = response.read(2 * 1024**2 + 1)
+    if len(raw) > 2 * 1024**2:
+        raise ValueError('Oversized TikTok author metadata')
+    from social_fetch.social_fallbacks import PostPage
+    page = PostPage(raw.decode('utf-8'))
+    blocks = page.scripts.get('__UNIVERSAL_DATA_FOR_REHYDRATION__') or []
+    if len(blocks) != 1:
+        raise ProviderUnavailable('The native TikTok post has no author metadata')
+    detail = json.loads(blocks[0]).get('__DEFAULT_SCOPE__', {}).get('webapp.video-detail') or {}
+    item = (detail.get('itemInfo') or {}).get('itemStruct') or {}
+    if not item:
+        raise ProviderUnavailable('The native TikTok post is unavailable')
+    if str(item.get('id')) != link.identity:
+        raise ValueError('TikTok author metadata returned another post')
+    author = (item.get('author') or {}).get('uniqueId')
+    if not isinstance(author, str) or not re.fullmatch(r'[A-Za-z0-9._]{1,30}', author):
+        raise ValueError('Unexpected TikTok author identity')
+    return download_link('https://www.tiktok.com/@' + author + '/video/' + link.identity)
+
+
 def tiktok_download(link, folder):
+    link = resolve_selected_post(link)
     data = urlencode({'url': link.url, 'hd': '1'}).encode()
     with tikwm_request('https://www.tikwm.com/api/', data) as response:
         raw = response.read(2 * 1024**2 + 1)
@@ -284,6 +364,8 @@ def tiktok_download(link, folder):
 
 
 def primary_download(link, folder):
+    if link.platform == 'facebook':
+        link = resolve_selected_post(link)
     if link.platform == 'instagram':
         from social_fetch.instagram_web import Form, download, page, videos
         rows = videos(Form(page('/process', {'q': link.url, 'scope': 'home', 'lang': 'en'})), link.identity)
@@ -296,6 +378,9 @@ def primary_download(link, folder):
         (folder / receipt['file']).replace(target)
     elif link.platform == 'tiktok':
         target = tiktok_download(link, folder)
+    elif link.platform == 'reddit':
+        from social_fetch.reddit_web import download_video
+        target = download_video(link.url, folder)
     elif link.platform == 'bluesky':
         target = bluesky_download(link, folder)
     elif link.platform == 'mastodon':
@@ -334,7 +419,7 @@ def primary_download(link, folder):
 
 
 PRIMARY_ROUTES = {'instagram': 'snapinsta', 'tiktok': 'tikwm', 'x': 'x_syndication',
-    'facebook': 'facebook_extractor', 'reddit': 'reddit_extractor',
+    'facebook': 'facebook_extractor', 'reddit': 'reddit_embed_rapidsave',
     'bluesky': 'bluesky_appview', 'mastodon': 'mastodon_rest',
     'pinterest': 'pinterest_extractor', 'twitch': 'twitch_extractor',
     'snapchat': 'snapchat_extractor', 'linkedin': 'linkedin_extractor'}
@@ -374,7 +459,9 @@ def acquire(url, folder):
             attempts.append({'route': route, 'status': 'acquired'})
             write_json(receipt_path, {'source_url': link.url, 'platform': link.platform,
                 'bytes': target.stat().st_size, 'sha256': digest(target),
-                'route': route, 'route_attempts': attempts})
+                'route': route, 'route_attempts': attempts,
+                **({'audio_required': True} if link.platform == 'reddit'
+                   and route == PRIMARY_ROUTES['reddit'] else {})})
             return
         except ROUTE_FAILURES as error:
             # Only stable route names and exception classes cross the API boundary.
@@ -405,21 +492,27 @@ def finalize(url, folder, video_id):
     final = folder / (video_id + '.mp4')
     pending = folder / (video_id + '.pending.mp4')
     subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-nostdin', '-y',
+                    *(['-protocol_whitelist', 'file,pipe'] if link.platform == 'reddit' else []),
                     '-i', str(raw), '-map', '0:v:0', '-map', '0:a:0?', '-c', 'copy',
                     '-movflags', '+faststart', str(pending)], check=True, timeout=180, stdin=subprocess.DEVNULL)
-    metadata = json.loads(subprocess.check_output(['ffprobe', '-v', 'error', '-show_streams',
+    metadata = json.loads(subprocess.check_output(['ffprobe', '-v', 'error',
+                            *(['-protocol_whitelist', 'file,pipe'] if link.platform == 'reddit' else []), '-show_streams',
                             '-show_format', '-of', 'json', str(pending)], timeout=30, stdin=subprocess.DEVNULL))
     video = next(stream for stream in metadata['streams'] if stream['codec_type'] == 'video')
     duration = float(metadata['format']['duration'])
     if duration <= 0 or int(video['width']) <= 0 or int(video['height']) <= 0:
         raise ValueError('Invalid video metadata')
-    subprocess.run(['ffmpeg', '-v', 'error', '-xerror', '-nostdin', '-i', str(pending),
+    has_audio = any(stream['codec_type'] == 'audio' for stream in metadata['streams'])
+    if link.platform == 'reddit' and receipt.get('audio_required') is True and not has_audio:
+        raise ValueError('Expected Reddit audio stream is missing')
+    subprocess.run(['ffmpeg', '-v', 'error', '-xerror', '-nostdin',
+                    *(['-protocol_whitelist', 'file,pipe'] if link.platform == 'reddit' else []), '-i', str(pending),
                     '-t', '1', '-f', 'null', '-'], check=True, timeout=60, stdin=subprocess.DEVNULL)
     pending.replace(final)
     write_json(folder / (video_id + '.receipt.json'), {'downloaded': True, 'source_url': link.url,
         'platform': link.platform, 'bytes': final.stat().st_size, 'sha256': digest(final),
         'height': int(video['height']), 'width': int(video['width']), 'duration': duration,
-        'audio': any(stream['codec_type'] == 'audio' for stream in metadata['streams']), 'decode_sample_seconds': 1,
+        'audio': has_audio, 'decode_sample_seconds': 1,
         **{k: receipt[k] for k in ('route', 'route_attempts') if k in receipt}})
 
 

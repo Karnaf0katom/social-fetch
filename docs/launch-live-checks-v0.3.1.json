@@ -1,0 +1,314 @@
+{
+  "schema": "social-fetch.launch-live-checks/v1",
+  "version": "0.3.1",
+  "observed_at": "2026-10-20T03:30:48.017956+00:00",
+  "execution": "independently installed CLI and ordinary detached workers; no source path, provider credentials or fault injection",
+  "samples": [
+    {
+      "sample": "youtube-landscape-hd",
+      "source_url": "https://www.youtube.com/watch?v=eRsGyueVLvQ",
+      "observed_at": "2026-10-20T03:30:52.698184+00:00",
+      "fresh_empty_data_directory": true,
+      "namespace": "launch-youtube-landscape-hd",
+      "download_cli_exit": 0,
+      "job": {
+        "id": "bf94c63dedef221461c4c407",
+        "source_url": "https://www.youtube.com/watch?v=eRsGyueVLvQ",
+        "platform": "youtube",
+        "status": "ready",
+        "bytes": 188680228,
+        "width": 2048,
+        "height": 872,
+        "duration": 888.093605,
+        "sha256": "5102043f8070419de8a3a5a24114d36f13b03a94367ce618faa80ce03cc7da3f",
+        "audio": true,
+        "route": "snapyt",
+        "route_attempts": [
+          {
+            "route": "snapyt",
+            "status": "acquired"
+          }
+        ]
+      },
+      "checked_export": true,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "av1",
+          "width": 2048,
+          "height": 872
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac"
+        }
+      ],
+      "audio_present": true,
+      "decode_sample_seconds": 1,
+      "decode_passed": true,
+      "no_overwrite_passed": true,
+      "namespace_isolation_passed": true,
+      "ready_job_deduplicated": true,
+      "receipt_source_matches": true,
+      "receipt_hash_matches": true,
+      "audio_track_labels": [
+        ""
+      ],
+      "original_language_identity": "unverified",
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 104.29
+    },
+    {
+      "sample": "instagram-post",
+      "source_url": "https://www.instagram.com/p/DeWYHFHIkVC/",
+      "observed_at": "2026-10-20T03:32:37.095864+00:00",
+      "fresh_empty_data_directory": true,
+      "namespace": "launch-instagram-post",
+      "download_cli_exit": 0,
+      "job": {
+        "id": "53869b3249b2758dd994de93",
+        "source_url": "https://www.instagram.com/p/DeWYHFHIkVC/",
+        "platform": "instagram",
+        "status": "ready",
+        "bytes": 10329647,
+        "width": 720,
+        "height": 1280,
+        "duration": 47.466667,
+        "sha256": "43d3b7fc940fafd5ac6cc3bc0d9d1fff602ffc9f7ac3c5eab73b729406cc0782",
+        "audio": true,
+        "route": "snapinsta",
+        "route_attempts": [
+          {
+            "route": "snapinsta",
+            "status": "acquired"
+          }
+        ]
+      },
+      "checked_export": true,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac"
+        }
+      ],
+      "audio_present": true,
+      "decode_sample_seconds": 1,
+      "decode_passed": true,
+      "no_overwrite_passed": true,
+      "namespace_isolation_passed": true,
+      "ready_job_deduplicated": true,
+      "receipt_source_matches": true,
+      "receipt_hash_matches": true,
+      "audio_track_labels": [],
+      "original_language_identity": "unverified",
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 33.96
+    }
+  ],
+  "checks": [
+    {
+      "name": "doctor",
+      "exit_code": 0,
+      "result": {
+        "status": "ready",
+        "checks": {
+          "ffmpeg": true,
+          "ffprobe": true,
+          "ddgs": true,
+          "yt_dlp": true
+        },
+        "network_checked": false
+      }
+    },
+    {
+      "name": "youtube-search",
+      "exit_code": 0,
+      "status": null,
+      "result_count": 3,
+      "results": [
+        {
+          "url": "https://www.youtube.com/watch?v=qTsX8czzSHo",
+          "title": "Blastoff! SpaceX launches Dragon to ISS wit 6,300 pounds of cargo, nails landing"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=-jPQmjMWy9I",
+          "title": "NASA's SpaceX 35th Commercial Resupply Services Rendezvous and Docking"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=P5xSsmCnDA0",
+          "title": "Blastoff! SpaceX launches classified US Space Force mission, nails landing"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "name": "instagram-accounts",
+      "exit_code": 0,
+      "status": null,
+      "result_count": 1,
+      "results": [
+        {
+          "url": "https://www.instagram.com/jameswebb_nasa/",
+          "title": "@jameswebb_nasa on Instagram"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "name": "owned-readme-resource",
+      "exit_code": 0,
+      "status": "ready",
+      "result_count": 0,
+      "results": [],
+      "warnings": [],
+      "sha256": "eb3c790ba20b247ee070b8e8a2cd258c0095b2a96e5ed700cbe7e7d8cb037b8c",
+      "bytes": 13652,
+      "text_status": "extracted",
+      "kind": "github_file"
+    }
+  ],
+  "runtime_source_sha256": {
+    "__main__.py": "293741967b1870faf83a74042af74b4751ebf21027d5dc7e779d129a913c88bc",
+    "instagram_web.py": "074cc0e23e12a7668ead44171d39edbad1a7a264551d5663aa1e14b334133b03",
+    "social_sources.py": "b12a6563e01654bf25328ceeaf922b493ab805458f25a19b1cbfebb9d68025a4",
+    "social_cli.py": "f9786280f796e4507004367d629b0e61fc535073150f9f7ea72796505d60b0c2",
+    "social_accounts.py": "0a437b2af67144fcc15d7f05adb65c835c9ce459d85a529bf75210a2dc051a12",
+    "social_resources.py": "48a9ac8800e91a3c8b8273e532783ed4b65fb76d0ff2f70606268d7686be1297",
+    "instagram_comments.py": "fc487353d579e49e7896f88988a167512e6d345e7f59dff18692ed8cf6c3d8e9",
+    "social_download.py": "806f979e00394886f8ae91ad39e94d3e8132347d8ce5d8aed830d0aefd25ae4c",
+    "__init__.py": "9c7c93f62a61ecb23c940857aa10708041b3488db215514d77f874fcf9e67fe2",
+    "youtube_fallback.py": "381b0b10bd6da76ddd7e3b103c243abcfd964064beea65858e4e086be7a4cfe1",
+    "web_search.py": "2ed06e0537f8f88ba26524b48c9c2dfd9e8840f7de59be06801ebe6753074a37",
+    "social_fallbacks.py": "b3fb1e3c1c0f575f00e1a5193485313ae2759cc0176d54aadca36c3ab048335b",
+    "client.py": "565b2831d734a8c22477755652472e803be431ab25f1146a772c71bfc32e5ef8",
+    "reddit_web.py": "f65a10f2725fe45385384f7da02aa587ad70b443133af618b07528a61c7b204b",
+    "youtube_web.py": "2464c8a091072cc16a884cf45e19651927fb9659c0a747b4a4e6cb20ef51c783",
+    "download_jobs.py": "18f7c70dfb56727b9ab55f5cf4f4cbd76ec37de228e3c8ef7f868097080b94eb"
+  },
+  "status": "passed",
+  "metadata_checks": [
+    {
+      "name": "youtube-landscape-sintel",
+      "status": "observed",
+      "result": {
+        "source_url": "https://www.youtube.com/watch?v=eRsGyueVLvQ",
+        "selected_streams": [
+          {
+            "format_id": "400",
+            "bytes": 174187342,
+            "ext": "mp4",
+            "height": 1080,
+            "track": ""
+          },
+          {
+            "format_id": "140",
+            "bytes": 14373564,
+            "ext": "m4a",
+            "height": 0,
+            "track": ""
+          }
+        ],
+        "track_labels": []
+      },
+      "elapsed_seconds": 3.18
+    },
+    {
+      "name": "youtube-landscape-bunny",
+      "status": "observed",
+      "result": {
+        "source_url": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+        "selected_streams": [
+          {
+            "format_id": "299",
+            "bytes": 257619653,
+            "ext": "mp4",
+            "height": 1080,
+            "track": ""
+          },
+          {
+            "format_id": "258",
+            "bytes": 30767611,
+            "ext": "m4a",
+            "height": 0,
+            "track": ""
+          }
+        ],
+        "track_labels": []
+      },
+      "elapsed_seconds": 2.89
+    },
+    {
+      "name": "instagram-mixed-carousel",
+      "status": "observed",
+      "result": {
+        "source_url": "https://www.instagram.com/p/DeKe6teEpya/",
+        "status": "no_usable_media",
+        "error_class": null,
+        "expected_parent_id": "4002147194820009114",
+        "media_types": [],
+        "identity_attributes": [],
+        "verified_videos": 0,
+        "identity_verified": false
+      },
+      "elapsed_seconds": 3.92
+    },
+    {
+      "name": "instagram-account",
+      "status": "observed",
+      "result": {
+        "source_url": "https://www.instagram.com/nasacreates/",
+        "results": [
+          {
+            "url": "https://www.instagram.com/p/DejqWO3qrHw/",
+            "title": "Chocolate indulgence, captured one frame at a time. \ud83c\udf6b\ud83e\udd0e\u2728 A cinematic product commercial for Chocolate Bel-Malt.@BelBeveragesgh \ud83c\udfa5 Shot & edited by NasaCreates. #NasaCreates #ProductVideography #ChocolateBelMalt #ProductCommercial #GhanaianCre",
+            "uploader": null
+          },
+          {
+            "url": "https://www.instagram.com/p/DeWYHFHIkVC/",
+            "title": "Rich chocolate. Irresistible goodness. \ud83e\udd0e\ud83c\udf6b Turning an everyday chocolate drink into a visual experience you can almost taste. A little creativity, a little chocolate magic, and a whole lot of product storytelling. \ud83c\udfac\u2728 @belbeveragesgh \ud83c\udfa5 Shot &",
+            "uploader": null
+          },
+          {
+            "url": "https://www.instagram.com/p/DeRM3dwImJ7/",
+            "title": "A simple bowl of cornflakes, but make it cinematic. \ud83e\udd63\u2728 For this spec commercial, I wanted to transform an everyday breakfast product into something visually exciting through creative lighting, dynamic product shots, texture and movement. Be",
+            "uploader": null
+          }
+        ],
+        "warnings": [
+          "A sample of public account videos; this is not a complete account collection."
+        ]
+      },
+      "elapsed_seconds": 5.94
+    },
+    {
+      "name": "youtube-account",
+      "status": "unavailable",
+      "error_class": "SearchUnavailable",
+      "elapsed_seconds": 9.25
+    },
+    {
+      "name": "mastodon-native-audio-candidates",
+      "status": "unavailable",
+      "error_class": "HTTPError",
+      "elapsed_seconds": 0.45
+    }
+  ],
+  "scope": {
+    "release": "Linux CLI and Python API alpha",
+    "external_relays": "independently operated; server code is outside this repository",
+    "not_claimed": [
+      "universal availability",
+      "original language for unlabeled audio",
+      "mixed Instagram carousels",
+      "complete account inventories",
+      "arbitrary Mastodon instances",
+      "independent YouTube backend uptime"
+    ]
+  }
+}

@@ -8,6 +8,7 @@ Examples: python3 -m social_fetch.social_cli search 'interior design' --source i
 import argparse
 import json
 from pathlib import Path
+import sys
 
 from social_fetch.client import Client, SOURCES, doctor
 
@@ -26,17 +27,38 @@ def main(argv=None):
     account = sub.add_parser('account', help='Read a small public account sample')
     account.add_argument('url')
     account.add_argument('--count', type=int, choices=range(1, 6), default=5)
+    comments = sub.add_parser('comments', help='Read a bounded public Instagram or Reddit comment sample')
+    comments.add_argument('url')
+    comments.add_argument('--count', type=int, choices=range(1, 101),
+                          help='Reddit: 1–20 (default 5); Instagram: 1–100 (default 50)')
+    links = sub.add_parser('links', help='Find linked resources in post/comment text or JSON from any platform')
+    inputs = links.add_mutually_exclusive_group(required=True)
+    inputs.add_argument('--text', help='Post, caption or comment text')
+    inputs.add_argument('--input', type=Path, help='UTF-8 text/JSON file; use - to read stdin (maximum 2 MiB)')
+    links.add_argument('--source-url', help='Original post URL, retained with every discovered reference')
+    links.add_argument('--count', type=int, choices=range(1, 101), default=20)
+    links.add_argument('--download', action='store_true', help='Save up to 20 references and their readable text; no recursive crawl')
+    resource = sub.add_parser('resource', help='Download a linked public document, GitHub resource, file or page')
+    resource.add_argument('url')
+    resource.add_argument('--archive', action='store_true', help='Save a GitHub repository ZIP instead of its README')
+    resource.add_argument('--max-mib', type=int, choices=range(1, 21), default=20)
+    resource.add_argument('--timeout', type=float, default=60)
     download = sub.add_parser('download', help='Queue one selected post; media must pass checks before ready')
     download.add_argument('url')
     download.add_argument('--wait', action='store_true', help='Wait for the saved job to finish')
     download.add_argument('--timeout', type=float, default=900, help='Maximum wait in seconds; the saved job continues after a timeout')
     download.add_argument('--out', type=Path, help='Wait and export a checked MP4 to this filename')
+    image = sub.add_parser('image', help='Queue one selected native Reddit image')
+    image.add_argument('url')
+    image.add_argument('--wait', action='store_true', help='Wait for the saved job to finish')
+    image.add_argument('--timeout', type=float, default=900, help='Maximum wait in seconds')
+    image.add_argument('--out', type=Path, help='Wait and export a checked image')
     status = sub.add_parser('status', help='Read a saved job without resubmitting')
     status.add_argument('job_id')
     export = sub.add_parser('export', help='Copy a checked, ready job into a local production source folder')
     export.add_argument('job_id')
     export.add_argument('--out', type=Path, required=True)
-    for command in (search, account, download, status, export):
+    for command in (search, account, comments, links, resource, download, image, status, export):
         command.add_argument('--namespace', default='social-cli', help='Production namespace; use the same value for later status')
         command.add_argument('--save', type=Path, help='Save metadata JSON (no media tokens) to a production source ledger')
     args = parser.parse_args(argv)
@@ -50,11 +72,33 @@ def main(argv=None):
             result = client.search(args.query, source=args.source, accounts=args.accounts, page=args.page, count=args.count)
         elif args.action == 'account':
             result = client.account(args.url, count=args.count)
-        elif args.action == 'download':
+        elif args.action == 'comments':
+            result = client.comments(args.url, count=args.count)
+        elif args.action == 'links':
+            payload = args.text
+            if args.input:
+                if str(args.input) == '-':
+                    payload = sys.stdin.read(2 * 1024**2 + 1)
+                else:
+                    with args.input.open(encoding='utf-8') as source:
+                        payload = source.read(2 * 1024**2 + 1)
+                if len(payload.encode('utf-8')) > 2 * 1024**2:
+                    raise ValueError('Use a text/JSON input of at most 2 MiB.')
+                try:
+                    payload = json.loads(payload)
+                except json.JSONDecodeError:
+                    if args.input.suffix.lower() == '.json':
+                        raise ValueError('The supplied JSON file is invalid.') from None
+            result = client.resources(payload, source_url=args.source_url, download=args.download, limit=args.count)
+        elif args.action == 'resource':
+            result = client.resource(args.url, archive=args.archive, max_bytes=args.max_mib * 1024**2, timeout=args.timeout)
+        elif args.action in {'download', 'image'}:
             client._timeout(args.timeout)
-            if args.out and (args.out.exists() or args.out.is_symlink() or args.out.suffix.lower() != '.mp4'):
-                raise ValueError('Choose a new MP4 output filename before downloading.')
-            result = client.download(args.url)
+            suffixes = {'.jpg', '.jpeg', '.png', '.webp'} if args.action == 'image' else {'.mp4'}
+            if args.out and (args.out.exists() or args.out.is_symlink() or args.out.suffix.lower() not in suffixes):
+                kind = 'image' if args.action == 'image' else 'MP4'
+                raise ValueError(f'Choose a new {kind} output filename before downloading.')
+            result = client.download_image(args.url) if args.action == 'image' else client.download(args.url)
             if args.wait or args.out:
                 job_id = result['id']
                 try:
@@ -71,9 +115,13 @@ def main(argv=None):
             args.save.parent.mkdir(parents=True, exist_ok=True)
             args.save.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
         print(json.dumps(result, ensure_ascii=False, indent=2))
-        return 1 if result.get('status') in {'failed', 'cancelled'} or result.get('timed_out') else 0
+        failed = {'failed', 'cancelled', 'unavailable', 'access_required', 'not_found', 'rate_limited',
+                  'blocked', 'too_large', 'needs_selection', 'unsupported', 'use_social_reader', 'integrity_error'}
+        return 1 if result.get('status') in failed or args.action == 'links' and result.get('status') == 'partial' or result.get('timed_out') else 0
     except KeyboardInterrupt:
-        print(json.dumps({'status': 'interrupted', 'message': 'Observation stopped. Saved download jobs continue; use status to reconnect.'}))
+        message = ('Operation interrupted.' if args.action == 'comments' else
+                   'Observation stopped. Saved download jobs continue; use status to reconnect.')
+        print(json.dumps({'status': 'interrupted', 'message': message}))
         return 130
     except Exception as error:
         from social_fetch.web_search import SearchBusy, SearchUnavailable

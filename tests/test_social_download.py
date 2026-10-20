@@ -215,12 +215,9 @@ def test_specific_x_video_keeps_the_selector_and_checks_the_parent_post(tmp_path
 
 
 def test_reddit_alphanumeric_post_identity_must_match_before_receipting(tmp_path, monkeypatch):
-    monkeypatch.setattr('social_fetch.social_download.shutil.which', lambda _: '/usr/bin/yt-dlp')
-    def run(command, **kwargs):
-        target = Path(command[command.index('--output') + 1])
-        target.write_bytes(b'ftyp' + b'x' * 1024)
-        (target.parent / 'extracted-id.txt').write_text('anotherpost\n')
-    monkeypatch.setattr('social_fetch.social_download.subprocess.run', run)
+    def wrong_post(*args):
+        return '<div id="canonical-url-updater" value="https://www.reddit.com/r/videos/comments/anotherpost/"></div><shreddit-screenview-data data="{}"></shreddit-screenview-data>'
+    monkeypatch.setattr('social_fetch.reddit_web._document', wrong_post)
     with pytest.raises(ValueError, match='another post'):
         acquire('https://www.reddit.com/r/videos/comments/6rrwyj/', tmp_path)
     assert not (tmp_path / 'acquisition.json').exists()

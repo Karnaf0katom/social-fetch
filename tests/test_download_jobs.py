@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -8,6 +9,11 @@ import pytest
 from social_fetch.download_jobs import DownloadJobs, save
 
 URL = 'https://www.youtube.com/watch?v=VQRLujxTm3c'
+
+
+def completed_receipt(source_url=URL):
+    return {'downloaded': True, 'source_url': source_url, 'bytes': 3,
+            'height': 1080, 'duration': 2, 'sha256': hashlib.sha256(b'mp4').hexdigest()}
 
 
 def prepared(tmp_path, monkeypatch):
@@ -70,7 +76,7 @@ def test_worker_waits_on_same_cpu_job_and_requires_actual_receipt(tmp_path, monk
             return SimpleNamespace(returncode=75, stderr='queued: job=42 key=assembly', stdout='')
         if 'wait' in command:
             (folder / 'VQRLujxTm3c.mp4').write_bytes(b'mp4')
-            save(folder / 'VQRLujxTm3c.receipt.json', {'downloaded': True, 'bytes': 3, 'height': 1080, 'duration': 2})
+            save(folder / 'VQRLujxTm3c.receipt.json', completed_receipt())
         return SimpleNamespace(returncode=0, stdout='', stderr='')
     monkeypatch.setattr('social_fetch.download_jobs.subprocess.run', run)
     service.work(folder)
@@ -90,6 +96,37 @@ def test_worker_failure_is_not_reported_as_delivery_and_retry_is_explicit(tmp_pa
     assert result['failure_stage'] == 'acquisition' and result['error_code'] == 'acquisition_failed'
     service.submit('ours', URL)
     assert len(calls) == 2
+
+
+@pytest.mark.parametrize('url', [URL, 'https://www.pinterest.com/pin/664281013778109217/'])
+@pytest.mark.parametrize('damage', ['source', 'digest', 'missing_digest', 'same_size_corruption'])
+def test_worker_rejects_wrong_identity_or_digest_before_ready(tmp_path, monkeypatch, url, damage):
+    service, _ = prepared(tmp_path, monkeypatch)
+    job = service.submit('ours', url)
+    folder = service.folder('ours', job['id'])
+    video_id = json.loads((folder / 'job.json').read_text())['video_id']
+
+    def run(command, **kwargs):
+        if '--finalize-only' in command:
+            (folder / (video_id + '.mp4')).write_bytes(b'bad' if damage == 'same_size_corruption' else b'mp4')
+            receipt = completed_receipt(job['source_url'])
+            if damage == 'source':
+                receipt['source_url'] = 'https://www.youtube.com/watch?v=jNQXAC9IVRw'
+            elif damage == 'digest':
+                receipt['sha256'] = 'a' * 64
+            elif damage == 'missing_digest':
+                receipt.pop('sha256')
+            save(folder / (video_id + '.receipt.json'), receipt)
+        return SimpleNamespace(returncode=0, stdout='', stderr='')
+
+    monkeypatch.setattr('social_fetch.download_jobs.subprocess.run', run)
+    service.work(folder)
+    result = service.get('ours', job['id'])
+    assert result['status'] == 'failed' and result['failure_stage'] == 'verification'
+    assert result['error_code'] == 'verification_failed'
+    assert 'sha256' not in result
+    with pytest.raises(FileNotFoundError):
+        service.file('ours', job['id'])
 
 
 @pytest.mark.parametrize('failure', ['timeout', 'assembly', 'verification'])
@@ -125,7 +162,7 @@ def test_pending_cpu_wait_never_becomes_failure_or_resubmits_assembly(tmp_path, 
             if len(waits) == 1:
                 return SimpleNamespace(returncode=75, stdout='still queued', stderr='')
             (folder / 'VQRLujxTm3c.mp4').write_bytes(b'mp4')
-            save(folder / 'VQRLujxTm3c.receipt.json', {'downloaded': True, 'bytes': 3, 'height': 1080, 'duration': 2})
+            save(folder / 'VQRLujxTm3c.receipt.json', completed_receipt())
         return SimpleNamespace(returncode=0, stdout='', stderr='')
     monkeypatch.setattr('social_fetch.download_jobs.subprocess.run', run)
     service.work(folder)
@@ -148,7 +185,7 @@ def test_explicit_repair_resumes_pending_cpu_identity_without_reacquiring_stream
             return SimpleNamespace(returncode=0, stdout=json.dumps({'job': {'status': 'queued'}}))
         assert 'wait' in command and command[2] == '42'
         (folder / 'VQRLujxTm3c.mp4').write_bytes(b'mp4')
-        save(folder / 'VQRLujxTm3c.receipt.json', {'downloaded': True, 'bytes': 3, 'height': 1080, 'duration': 2})
+        save(folder / 'VQRLujxTm3c.receipt.json', completed_receipt())
         return SimpleNamespace(returncode=0, stdout='', stderr='')
     monkeypatch.setattr('social_fetch.download_jobs.subprocess.run', run)
     repaired = service.submit('ours', URL)
@@ -195,6 +232,32 @@ def test_waiting_queue_has_disk_backpressure_without_false_failure(tmp_path, mon
     assert service.list('ours')['downloads'][0]['status'] == 'waiting'
 
 
+def test_waiting_queue_cap_preserves_existing_deduplication(tmp_path, monkeypatch):
+    service, calls = prepared(tmp_path, monkeypatch)
+    monkeypatch.setattr('social_fetch.download_jobs.MAX_WAITING', 2)
+    urls = [f'https://youtube.com/watch?v={value * 11}' for value in 'abcde']
+    jobs = [service.submit('ours', url, queue=True) for url in urls[:4]]
+    assert len(calls) == 2
+    assert service.submit('ours', urls[2], queue=True)['id'] == jobs[2]['id']
+    with pytest.raises(RuntimeError, match='queue is full'):
+        service.submit('ours', urls[4], queue=True)
+    assert len(calls) == 2 and service.list('ours')['total'] == 4
+
+
+def test_interrupted_worker_requires_explicit_retry_and_keeps_job_identity(tmp_path, monkeypatch):
+    service, calls = prepared(tmp_path, monkeypatch)
+    job = service.submit('ours', URL)
+    restored = DownloadJobs(tmp_path)
+    with monkeypatch.context() as dead_worker:
+        dead_worker.setattr('social_fetch.download_jobs.os.kill', lambda *_: (_ for _ in ()).throw(ProcessLookupError()))
+        interrupted = restored.get('ours', job['id'])
+        assert interrupted['status'] == 'failed' and interrupted['error_code'] == 'interrupted'
+        assert interrupted['failure_stage'] == 'worker'
+        assert restored.list('ours')['downloads'][0]['status'] == 'failed' and len(calls) == 1
+    retried = restored.submit('ours', URL)
+    assert retried['id'] == job['id'] and retried['status'] == 'queued' and len(calls) == 2
+
+
 def test_independent_install_uses_existing_finalizer_without_private_vm_gate(tmp_path, monkeypatch):
     service, _ = prepared(tmp_path, monkeypatch)
     monkeypatch.setattr('social_fetch.download_jobs.CPU_SLOT', tmp_path / 'not-installed/cpu-slot.sh')
@@ -205,7 +268,7 @@ def test_independent_install_uses_existing_finalizer_without_private_vm_gate(tmp
         calls.append(command)
         if '--finalize-only' in command:
             (folder / 'VQRLujxTm3c.mp4').write_bytes(b'mp4')
-            save(folder / 'VQRLujxTm3c.receipt.json', dict(downloaded=True, bytes=3, height=720, duration=2, sha256='a' * 64))
+            save(folder / 'VQRLujxTm3c.receipt.json', completed_receipt())
         return SimpleNamespace(returncode=0, stdout='', stderr='')
     monkeypatch.setattr('social_fetch.download_jobs.subprocess.run', run)
     service.work(folder)

@@ -1,0 +1,308 @@
+{
+  "utc": "2026-10-19T00:42:50.966595+00:00",
+  "completed_at": "2026-10-19T01:19:52.615288+00:00",
+  "status": "passed_integrated",
+  "namespace": "reddit-integrated-20261019-final",
+  "clean_install": true,
+  "empty_data_directory_before_start": true,
+  "shared_integration_applied": true,
+  "installed_python_sha256": {
+    "__init__.py": "9c7c93f62a61ecb23c940857aa10708041b3488db215514d77f874fcf9e67fe2",
+    "__main__.py": "293741967b1870faf83a74042af74b4751ebf21027d5dc7e779d129a913c88bc",
+    "client.py": "565b2831d734a8c22477755652472e803be431ab25f1146a772c71bfc32e5ef8",
+    "download_jobs.py": "18f7c70dfb56727b9ab55f5cf4f4cbd76ec37de228e3c8ef7f868097080b94eb",
+    "instagram_comments.py": "fc487353d579e49e7896f88988a167512e6d345e7f59dff18692ed8cf6c3d8e9",
+    "instagram_web.py": "074cc0e23e12a7668ead44171d39edbad1a7a264551d5663aa1e14b334133b03",
+    "reddit_web.py": "f65a10f2725fe45385384f7da02aa587ad70b443133af618b07528a61c7b204b",
+    "social_accounts.py": "0a437b2af67144fcc15d7f05adb65c835c9ce459d85a529bf75210a2dc051a12",
+    "social_cli.py": "f9786280f796e4507004367d629b0e61fc535073150f9f7ea72796505d60b0c2",
+    "social_download.py": "806f979e00394886f8ae91ad39e94d3e8132347d8ce5d8aed830d0aefd25ae4c",
+    "social_fallbacks.py": "b3fb1e3c1c0f575f00e1a5193485313ae2759cc0176d54aadca36c3ab048335b",
+    "social_resources.py": "48a9ac8800e91a3c8b8273e532783ed4b65fb76d0ff2f70606268d7686be1297",
+    "social_sources.py": "b12a6563e01654bf25328ceeaf922b493ab805458f25a19b1cbfebb9d68025a4",
+    "web_search.py": "2ed06e0537f8f88ba26524b48c9c2dfd9e8840f7de59be06801ebe6753074a37",
+    "youtube_fallback.py": "381b0b10bd6da76ddd7e3b103c243abcfd964064beea65858e4e086be7a4cfe1",
+    "youtube_web.py": "2464c8a091072cc16a884cf45e19651927fb9659c0a747b4a4e6cb20ef51c783"
+  },
+  "version": "0.3.1",
+  "dependencies": {
+    "ddgs": "9.14.4",
+    "yt-dlp": "2026.8.19"
+  },
+  "schema": "social-fetch.reddit-live/v1",
+  "maintained_source_sha256": {
+    "client.py": "8552415244390e5c511a942aee7203c6e03d572bcb963f4c792b923c9384729f",
+    "download_jobs.py": "05bf4b998ad2d531b86e407f618ba3b740053d33d370a7ced0ff063fc93582c3",
+    "social_cli.py": "79203b727ddde05a738a8a29e80f13ea6e1f99a262b3c19a84950b1f0c558a13",
+    "social_sources.py": "a3b621035bef53b9df27fcc33bd9266d7ade5bd83f7f4b83c4118f015c6b90ce",
+    "social_accounts.py": "180b9baa95d76fa81514e2150afbf0070b5bce8edefda66d9ad4298a79f6c46f",
+    "social_download.py": "7f0025efd3c5efdd0857646f9f7e512f66555b2f4d05ede8eea686c3ca6b023e",
+    "youtube_web.py": "13e9d574c3761fb5ec96174a51fd8b438e220ab73a04148bde9dbc50f9c5a624",
+    "instagram_web.py": "074cc0e23e12a7668ead44171d39edbad1a7a264551d5663aa1e14b334133b03",
+    "web_search.py": "cb8e85ff58acf9e7e0ebd43c41b43cdcb8255d57edf2a6d821fcfe15db5140f6",
+    "social_fallbacks.py": "347cc6330858e005eba8115f2e012c3936c28a8e0301e2f1b2b54f13f782243b",
+    "youtube_fallback.py": "50a92b9b737c797f2026771db74f839aefac38e276938c22cc17fb2a9501b837",
+    "social_resources.py": "01b732e1800324c2267ba5b2a71e6f8b72834e7ec0c55cf6970c5cf1396a7cf3",
+    "instagram_comments.py": "ea66bcad58581b42c9cb3e2b3d0d9e069af033818ff3aa1703d189af001b4274",
+    "reddit_web.py": "f915fb3792a3c264fd3ac04a8e4b55b747be16b4130de4dd1ac247fef0b9172f",
+    "tests/test_social_client.py": "00a70a816b49348ffd413b2b3cacf06c72ac11293c7daaccf65f9b77c225492c",
+    "tests/test_social_sources.py": "f0bc1b9e99dbf925f6d445bd936838d22e253c5c0a53bf66cfdb018e6a795f1b",
+    "tests/test_social_download.py": "6a30771d3d27fffdfcecf10746f9a1e5109ef9b735e161fbca6a97558a7a8e4a",
+    "tests/test_download_jobs.py": "67de196a1bd7b1808de544f994bf012887d456c74aa4e6794dd01fcaea6de717",
+    "tests/test_youtube_web.py": "ad9d234d6b21ca6b5b34ac3970b73c2b2821ed3069229ddd29346725ca1a3127",
+    "tests/test_social_fallbacks.py": "640e0ed27acb0e4d97fe16a258526b6e44eb5b9ee3601013900febc43c4fa755",
+    "tests/test_web_search.py": "7ede808dcdc6cdc6fd185814874fc4b81cf01a0cd9eda8bbce0766b333e2f484",
+    "tests/test_social_resources.py": "307d76609a9af48ed91f2ef48c0eca40fef8b7c87e4155a4991ef6ca1f15561f",
+    "tests/test_instagram_comments.py": "7593eb6cab5dd00e9e1301e632797c3cebf1086c4c0860b08df71dcf3d2410c9",
+    "tests/test_reddit_acquisition.py": "888a2b14c88da6f6e57dec0f07c86a2b733c6ee0ed98bfc54c066df6e7c4d906",
+    "tests/test_linkedin_acquisition.py": "2235612562ec8cac47f06b5cc63bab2aaa8c91e0904148fde3299a725d0adf02",
+    "tests/test_headline_fallbacks.py": "340a877c0093c0d057de726d392ed7e3dba737708dd6fbb1bcd8685434bff93e",
+    "oss/export.py": "e6fb42698dd459f93198792915b8a0a121bb7b4933f635021d39ea1617cc3478"
+  },
+  "maintained_checks": {
+    "passed": 479,
+    "test_summary": [
+      "........................................................................ [ 90%]",
+      "...............................................                          [100%]",
+      "479 passed in 6.84s"
+    ]
+  },
+  "installed_checks": {
+    "test_summary": [
+      "........................................................................ [ 89%]",
+      "..................................................                       [100%]",
+      "482 passed in 14.72s"
+    ]
+  },
+  "vm_package_check": {
+    "status": "passed",
+    "cpu_job_id": "cb-401b2235cd244657"
+  },
+  "finalizer_cpu_jobs": [
+    {
+      "id": 1646,
+      "media_kind": "video",
+      "status": "passed"
+    },
+    {
+      "id": 1653,
+      "media_kind": "image",
+      "status": "passed"
+    }
+  ],
+  "video": {
+    "source_url": "https://www.reddit.com/r/mercedes_benz/comments/1uwp60q/",
+    "post_id": "1uwp60q",
+    "native_media_id": "doila6xc6adh1",
+    "platform": "reddit",
+    "status": "ready",
+    "expected_audio": true,
+    "bytes": 21644453,
+    "width": 1080,
+    "height": 1920,
+    "duration": 52.066667,
+    "sha256": "5f275697cc812e836318b05fe82f88baba41b895e6d77e0d78ae5b051635ee4e",
+    "audio": true,
+    "route": "reddit_embed_rapidsave",
+    "route_attempts": [
+      {
+        "route": "reddit_embed_rapidsave",
+        "status": "acquired"
+      }
+    ],
+    "final_receipt_sha256": "5f275697cc812e836318b05fe82f88baba41b895e6d77e0d78ae5b051635ee4e",
+    "export_sha256": "5f275697cc812e836318b05fe82f88baba41b895e6d77e0d78ae5b051635ee4e",
+    "export_matches_receipt": true,
+    "streams": [
+      {
+        "codec_type": "video",
+        "codec_name": "h264",
+        "width": 1080,
+        "height": 1920
+      },
+      {
+        "codec_type": "audio",
+        "codec_name": "aac",
+        "sample_rate": "48000",
+        "channels": 2
+      }
+    ],
+    "decode_sample_seconds": 1,
+    "decode_sample_frames": null,
+    "no_overwrite_verified": true,
+    "namespace_isolation_verified": true,
+    "deduplication_verified": true
+  },
+  "image": {
+    "source_url": "https://www.reddit.com/r/itookapicture/comments/1x3kp6y/",
+    "post_id": "1x3kp6y",
+    "native_media_id": "hin1y2pvtwuh1",
+    "platform": "reddit",
+    "status": "ready",
+    "bytes": 2896146,
+    "width": 4500,
+    "height": 3000,
+    "duration": 0,
+    "sha256": "ea473d0fbdbadf104e81aac7f9e1c8c6680b9035cddbc36f1afc36c9617c63b3",
+    "audio": false,
+    "route": "reddit_embed_image",
+    "route_attempts": [
+      {
+        "route": "reddit_embed_image",
+        "status": "acquired"
+      }
+    ],
+    "media_kind": "image",
+    "image_format": "jpeg",
+    "final_receipt_sha256": "ea473d0fbdbadf104e81aac7f9e1c8c6680b9035cddbc36f1afc36c9617c63b3",
+    "export_sha256": "ea473d0fbdbadf104e81aac7f9e1c8c6680b9035cddbc36f1afc36c9617c63b3",
+    "export_matches_receipt": true,
+    "streams": [
+      {
+        "codec_type": "video",
+        "codec_name": "mjpeg",
+        "width": 4500,
+        "height": 3000
+      }
+    ],
+    "decode_sample_seconds": null,
+    "decode_sample_frames": 1,
+    "no_overwrite_verified": true,
+    "namespace_isolation_verified": true,
+    "deduplication_verified": true,
+    "format_extension_verified": true,
+    "cli_export_verified": true
+  },
+  "comments": {
+    "status": "partial",
+    "source_url": "https://www.reddit.com/r/mercedes_benz/comments/1uwp60q/",
+    "post_id": "1uwp60q",
+    "complete": false,
+    "reported_total": null,
+    "discovery_route": "arctic_shift_comment_ids",
+    "body_route": "reddit_public_comment_embed",
+    "current_bodies": true,
+    "discovered_count": 3,
+    "returned_count": 3,
+    "unavailable_count": 0,
+    "gaps": [
+      "Partial sample only: archive IDs may omit recent comments; bodies were read from current public comment embeds."
+    ],
+    "cli_exit_code": 0,
+    "selected_comments": [
+      {
+        "id": "oy390i2",
+        "post_id": "1uwp60q",
+        "text_sha256": "17d237ec919a89096780ced6d9dc12d84fb00a8853d36508fa287127577c65de",
+        "characters": 168
+      },
+      {
+        "id": "oxuujz9",
+        "post_id": "1uwp60q",
+        "text_sha256": "b914c8930590177aafe36a908df82ee729d6ba302b04b16922ceb8314300bdd4",
+        "characters": 75
+      },
+      {
+        "id": "oxmk6is",
+        "post_id": "1uwp60q",
+        "text_sha256": "22fa7dc8b3c9818f609b02265057a0f01948254518ad6fcf711d4534f43b0c49",
+        "characters": 21
+      }
+    ]
+  },
+  "search": {
+    "query": "sunrise",
+    "count_limit": 3,
+    "provider": "public",
+    "cached": false,
+    "results": [
+      {
+        "url": "https://www.reddit.com/r/xbox360/comments/18zoxyx/",
+        "title": "HALO REACH IS MATCHMAKING IS BACK WITH THE POWER OF SUNRISE",
+        "source": "Reddit"
+      }
+    ]
+  },
+  "search_attempts": [
+    {
+      "query": "sunrise",
+      "count_limit": 3,
+      "provider": "public",
+      "cached": false,
+      "results": [
+        {
+          "url": "https://www.reddit.com/r/xbox360/comments/18zoxyx/",
+          "title": "HALO REACH IS MATCHMAKING IS BACK WITH THE POWER OF SUNRISE",
+          "source": "Reddit"
+        }
+      ]
+    }
+  ],
+  "retained_failed_attempts": [
+    {
+      "id": "a65fe6eba4dcb4e18e8657c8",
+      "source_url": "https://www.reddit.com/r/mercedes_benz/comments/1uwp60q/",
+      "status": "failed",
+      "error_code": "assembly_failed",
+      "failure_stage": "assembly"
+    },
+    {
+      "id": "a65fe6eba4dcb4e18e8657c8",
+      "source_url": "https://www.reddit.com/r/mercedes_benz/comments/1uwp60q/",
+      "status": "failed",
+      "error_code": "interrupted",
+      "failure_stage": "worker"
+    },
+    {
+      "id": "532a07063396b5f8b07d7411",
+      "source_url": "https://www.reddit.com/r/itookapicture/comments/1x3kp6y/",
+      "status": "failed",
+      "error_code": "interrupted",
+      "failure_stage": "worker"
+    }
+  ],
+  "probe_environment_note": "A queued controller inherited its parent no-queue setting; normal queue defaults were restored for its detached workers. An interrupted worker was then explicitly reconnected through the same-ID Client retry path using its already-passed media check.",
+  "limits": [
+    "Indexed public search can return no matches and does not validate media availability.",
+    "Comment reading returns a partial current sample of 1\u201320; archive IDs can miss recent comments, totals are unknown and replies are not fully expanded.",
+    "Single native-image posts only; JPEG is live-verified. PNG/WebP have checked format paths but no live sample.",
+    "Native video with audio is live-verified through the merged RapidSave route; availability and broader post formats remain conditional.",
+    "No posting, comment writing, voting, account sessions, galleries, crossposts or external embeds."
+  ],
+  "prior_install_search_observations": {
+    "utc": "2026-10-19T00:25:07.914060+00:00",
+    "attempts": [
+      {
+        "query": "mountain sunrise",
+        "count_limit": 3,
+        "provider": "public",
+        "cached": false,
+        "results": []
+      },
+      {
+        "query": "sunrise",
+        "count_limit": 3,
+        "provider": "public",
+        "cached": false,
+        "results": [
+          {
+            "url": "https://www.reddit.com/r/sunrise/comments/1i0c5wo/",
+            "title": "Link to reddit.com",
+            "source": "Reddit"
+          },
+          {
+            "url": "https://www.reddit.com/r/germany/comments/e9v6rn/",
+            "title": "A Frankfurt sunrise : r/germany - Reddit",
+            "source": "Reddit"
+          },
+          {
+            "url": "https://www.reddit.com/r/aviation/comments/bwms6d/",
+            "title": "A lovely sunrise, somewhere over Germany between Berlin and ...",
+            "source": "Reddit"
+          }
+        ]
+      }
+    ],
+    "note": "Retained observations from the first integrated installation; the final source hashes above identify this fresh run."
+  }
+}

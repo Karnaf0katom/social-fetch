@@ -1,0 +1,1914 @@
+{
+  "release": "0.3.1 alpha candidate; unpublished",
+  "observed_at": "2026-10-18T12:25:36.914067+00:00",
+  "environment": "Linux datacenter VM; fresh virtual environment and empty per-sample data directories; no ambient credentials, browser sessions or user cookies",
+  "package": {
+    "version": "0.3.1",
+    "yt_dlp": "2026.8.19",
+    "python_sources_sha256": {
+      "src/social_fetch/__main__.py": "293741967b1870faf83a74042af74b4751ebf21027d5dc7e779d129a913c88bc",
+      "src/social_fetch/instagram_web.py": "074cc0e23e12a7668ead44171d39edbad1a7a264551d5663aa1e14b334133b03",
+      "src/social_fetch/social_sources.py": "1a77eadcf3a932d82579ba9c8a14494045a3025680f84a8f6320bf35705cdb01",
+      "src/social_fetch/social_cli.py": "34a50a91edf2aa879045ede54dbcbca5f8c59330689cc560f92ba8d268e516aa",
+      "src/social_fetch/social_accounts.py": "0a53940546194a61d35dc24210d86994d7a3df31c7cdcdb7dc4f39e28081eb0d",
+      "src/social_fetch/social_download.py": "c389b85321ca2a72f21150b8040e5aaa61c9c1b7754130131d49d44cb151ff4b",
+      "src/social_fetch/__init__.py": "9c7c93f62a61ecb23c940857aa10708041b3488db215514d77f874fcf9e67fe2",
+      "src/social_fetch/youtube_fallback.py": "381b0b10bd6da76ddd7e3b103c243abcfd964064beea65858e4e086be7a4cfe1",
+      "src/social_fetch/web_search.py": "fd50187d945ed2ef7f68b625f1b23daa5aeb3e1e363d52190d8df1b474396d5d",
+      "src/social_fetch/social_fallbacks.py": "7ebb8c43bf577647dc12ca10ba13826574290b0e2be8e4ebd1ce21934301d42e",
+      "src/social_fetch/client.py": "00db7f839e02a3cae374e7383a14d70679850afec58a621b81029f16f4c50785",
+      "src/social_fetch/youtube_web.py": "2464c8a091072cc16a884cf45e19651927fb9659c0a747b4a4e6cb20ef51c783",
+      "src/social_fetch/download_jobs.py": "e6e3509cfb6e6ede892cb708f855b9896619a9f7c5e24fc8afe439672d6bb0c5"
+    }
+  },
+  "methods": {
+    "live_failover": "The installed JSON CLI starts its ordinary detached worker. A probe-only sitecustomize hook injects TimeoutError only while the primary_download stack is active, at its HTTP/subprocess boundary. Fallback HTTP requests, bytes, media finalization and CLI export are unmodified.",
+    "security_faults": "The same primary-only boundary injects an identity ValueError, calls the actual forbidden-host validator, or raises ENOSPC. A single rejected/failed primary attempt and no completed output are required.",
+    "recovery": "A short CLI observation timeout reconnects to the original job. A separate test terminates only its own worker session after a pause marker, then explicitly retries that job. Export corruption modifies only that probe file.",
+    "media": "ffprobe stream/size inspection, normal finalizer checks, one-second decode of the CLI export, matching SHA-256, no-overwrite, deduplication and namespace checks for completed samples.",
+    "discovery": "Queries and account samples use the independently installed Client without ambient API keys. Indexed candidates do not imply media availability."
+  },
+  "summary": {
+    "live_automatic_failover_passed": 6,
+    "live_automatic_failover_failed": 1,
+    "headline_samples_ready": 7,
+    "headline_samples_failed_or_pending": 3
+  },
+  "automatic_failover": [
+    {
+      "sample": "failover-bluesky",
+      "platform": "bluesky",
+      "source_url": "https://bsky.app/profile/bsky.app/post/3l3vgf77uco2g",
+      "observed_at": "2026-10-18T12:13:16.731952+00:00",
+      "namespace": "readiness-failover-bluesky",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": "timeout",
+      "discovery": {
+        "status": "known canonical fixture; no new discovery claim"
+      },
+      "download_cli_exit": 0,
+      "job": {
+        "id": "0b88d8975a801905e4f715f3",
+        "source_url": "https://bsky.app/profile/bsky.app/post/3l3vgf77uco2g",
+        "platform": "bluesky",
+        "status": "ready",
+        "message": "MP4 ready",
+        "bytes": 6688967,
+        "width": 1920,
+        "height": 1080,
+        "duration": 29.737,
+        "sha256": "f3c3fecb52a9e3d9f7c88d6510baadde425c0444f66efd624eca881661b1d862",
+        "audio": true,
+        "route": "bluesky_public_repo",
+        "route_attempts": [
+          {
+            "route": "bluesky_appview",
+            "status": "unavailable",
+            "error": "TimeoutError"
+          },
+          {
+            "route": "bluesky_public_repo",
+            "status": "acquired"
+          }
+        ]
+      },
+      "fault_injections": [
+        {
+          "platform": "bluesky",
+          "mode": "timeout"
+        }
+      ],
+      "export_cli_exit": 0,
+      "export_sha256_matches": true,
+      "checked_export": true,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac"
+        }
+      ],
+      "audio_expected": true,
+      "audio_expectation_matches": true,
+      "decode_sample_seconds": 1,
+      "decode_passed": true,
+      "no_overwrite_passed": true,
+      "namespace_isolation_passed": true,
+      "ready_job_deduplicated": true,
+      "receipt_identity_matches": true,
+      "final_receipt_sha256_matches": true,
+      "source_id": "f9a28f7383af0e4afce4afbcb8bde4a4",
+      "transferred_bytes": 6688967,
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 23.16,
+      "automatic_failover_verified": true,
+      "adapter_attempts": [
+        {
+          "route": "bluesky_appview",
+          "status": "unavailable",
+          "error": "TimeoutError"
+        },
+        {
+          "route": "bluesky_public_repo",
+          "status": "acquired"
+        }
+      ]
+    },
+    {
+      "sample": "failover-instagram",
+      "platform": "instagram",
+      "source_url": "https://www.instagram.com/p/DeWYHFHIkVC/",
+      "observed_at": "2026-10-18T12:13:39.895519+00:00",
+      "namespace": "readiness-failover-instagram",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": "timeout",
+      "discovery": {
+        "status": "known canonical fixture; no new discovery claim"
+      },
+      "download_cli_exit": 0,
+      "job": {
+        "id": "53869b3249b2758dd994de93",
+        "source_url": "https://www.instagram.com/p/DeWYHFHIkVC/",
+        "platform": "instagram",
+        "status": "ready",
+        "message": "MP4 ready",
+        "bytes": 10329647,
+        "width": 720,
+        "height": 1280,
+        "duration": 47.466667,
+        "sha256": "43d3b7fc940fafd5ac6cc3bc0d9d1fff602ffc9f7ac3c5eab73b729406cc0782",
+        "audio": true,
+        "route": "instagram_extractor",
+        "route_attempts": [
+          {
+            "route": "snapinsta",
+            "status": "unavailable",
+            "error": "TimeoutError"
+          },
+          {
+            "route": "instagram_extractor",
+            "status": "acquired"
+          }
+        ]
+      },
+      "fault_injections": [
+        {
+          "platform": "instagram",
+          "mode": "timeout"
+        }
+      ],
+      "export_cli_exit": 0,
+      "export_sha256_matches": true,
+      "checked_export": true,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac"
+        }
+      ],
+      "audio_expected": true,
+      "audio_expectation_matches": true,
+      "decode_sample_seconds": 1,
+      "decode_passed": true,
+      "no_overwrite_passed": true,
+      "namespace_isolation_passed": true,
+      "ready_job_deduplicated": true,
+      "receipt_identity_matches": true,
+      "final_receipt_sha256_matches": true,
+      "source_id": "DeWYHFHIkVC",
+      "transferred_bytes": 10329436,
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 31.37,
+      "automatic_failover_verified": true,
+      "adapter_attempts": [
+        {
+          "route": "snapinsta",
+          "status": "unavailable",
+          "error": "TimeoutError"
+        },
+        {
+          "route": "instagram_extractor",
+          "status": "acquired"
+        }
+      ]
+    },
+    {
+      "sample": "failover-linkedin",
+      "platform": "linkedin",
+      "source_url": "https://www.linkedin.com/posts/the-mathworks_2_what-is-mathworks-cloud-center-activity-7151241570371948544-4Gu7/",
+      "observed_at": "2026-10-18T12:14:11.319310+00:00",
+      "namespace": "readiness-failover-linkedin",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": "timeout",
+      "discovery": {
+        "status": "known canonical fixture; no new discovery claim"
+      },
+      "download_cli_exit": 1,
+      "job": {
+        "id": "a0e2cbbc95a79f4da133230f",
+        "source_url": "https://www.linkedin.com/posts/the-mathworks_2_what-is-mathworks-cloud-center-activity-7151241570371948544-4Gu7/",
+        "platform": "linkedin",
+        "status": "failed",
+        "message": "Public source acquisition failed. The post may require login, be unavailable, or have no downloadable video.",
+        "route_attempts": [
+          {
+            "route": "linkedin_extractor",
+            "status": "unavailable"
+          },
+          {
+            "route": "linkedin_public_page",
+            "status": "unavailable"
+          }
+        ],
+        "error_code": "acquisition_failed",
+        "failure_stage": "acquisition"
+      },
+      "fault_injections": [
+        {
+          "platform": "linkedin",
+          "mode": "timeout"
+        }
+      ],
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 6.25,
+      "automatic_failover_verified": false,
+      "adapter_attempts": [
+        {
+          "route": "linkedin_extractor",
+          "status": "unavailable",
+          "error": "TimeoutError"
+        },
+        {
+          "route": "linkedin_public_page",
+          "status": "unavailable",
+          "error": "ProviderUnavailable"
+        }
+      ],
+      "attempts_this_session": 1,
+      "blocker": "The real installed worker reached the alternative, which returned ProviderUnavailable before verified media.",
+      "resume_condition": "New selected-post metadata containing an approved progressive MP4, followed by installed automatic-failover/export proof."
+    },
+    {
+      "sample": "failover-mastodon",
+      "platform": "mastodon",
+      "source_url": "https://mastodon.social/@mastodon/116839714185151652",
+      "observed_at": "2026-10-18T12:14:17.570348+00:00",
+      "namespace": "readiness-failover-mastodon",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": "timeout",
+      "discovery": {
+        "status": "known canonical fixture; no new discovery claim"
+      },
+      "download_cli_exit": 0,
+      "job": {
+        "id": "1f68ce2688642ea7b8500dc0",
+        "source_url": "https://mastodon.social/@mastodon/116839714185151652",
+        "platform": "mastodon",
+        "status": "ready",
+        "message": "MP4 ready",
+        "bytes": 1287545,
+        "width": 1692,
+        "height": 1484,
+        "duration": 38.85,
+        "sha256": "a1e61bc1b63df48e61721a39515ddcd65e41b6d1bc964d69a24a747012e73364",
+        "audio": false,
+        "route": "mastodon_activitypub",
+        "route_attempts": [
+          {
+            "route": "mastodon_rest",
+            "status": "unavailable",
+            "error": "TimeoutError"
+          },
+          {
+            "route": "mastodon_activitypub",
+            "status": "acquired"
+          }
+        ]
+      },
+      "fault_injections": [
+        {
+          "platform": "mastodon",
+          "mode": "timeout"
+        }
+      ],
+      "export_cli_exit": 0,
+      "export_sha256_matches": true,
+      "checked_export": true,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 1692,
+          "height": 1484
+        }
+      ],
+      "audio_expected": false,
+      "audio_expectation_matches": true,
+      "decode_sample_seconds": 1,
+      "decode_passed": true,
+      "no_overwrite_passed": true,
+      "namespace_isolation_passed": true,
+      "ready_job_deduplicated": true,
+      "receipt_identity_matches": true,
+      "final_receipt_sha256_matches": true,
+      "source_id": "558d5ecbbc85b2008f893253853ee4d6",
+      "transferred_bytes": 1287546,
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 17.06,
+      "automatic_failover_verified": true,
+      "adapter_attempts": [
+        {
+          "route": "mastodon_rest",
+          "status": "unavailable",
+          "error": "TimeoutError"
+        },
+        {
+          "route": "mastodon_activitypub",
+          "status": "acquired"
+        }
+      ]
+    },
+    {
+      "sample": "failover-pinterest",
+      "platform": "pinterest",
+      "source_url": "https://www.pinterest.com/pin/664281013778109217/",
+      "observed_at": "2026-10-18T12:14:34.627118+00:00",
+      "namespace": "readiness-failover-pinterest",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": "timeout",
+      "discovery": {
+        "status": "known canonical fixture; no new discovery claim"
+      },
+      "download_cli_exit": 0,
+      "job": {
+        "id": "9d581a1a711bdffb6e84ed2e",
+        "source_url": "https://www.pinterest.com/pin/664281013778109217/",
+        "platform": "pinterest",
+        "status": "ready",
+        "message": "MP4 ready",
+        "bytes": 18403924,
+        "width": 1080,
+        "height": 1920,
+        "duration": 57.7,
+        "sha256": "4599502cb76586e25cf6b4b7383babb0254fff33717d0f0ea0c48f1536ed9a6c",
+        "audio": true,
+        "route": "pinterest_public_api",
+        "route_attempts": [
+          {
+            "route": "pinterest_extractor",
+            "status": "unavailable",
+            "error": "TimeoutError"
+          },
+          {
+            "route": "pinterest_public_api",
+            "status": "acquired"
+          }
+        ]
+      },
+      "fault_injections": [
+        {
+          "platform": "pinterest",
+          "mode": "timeout"
+        }
+      ],
+      "export_cli_exit": 0,
+      "export_sha256_matches": true,
+      "checked_export": true,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 1080,
+          "height": 1920
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac"
+        }
+      ],
+      "audio_expected": true,
+      "audio_expectation_matches": true,
+      "decode_sample_seconds": 1,
+      "decode_passed": true,
+      "no_overwrite_passed": true,
+      "namespace_isolation_passed": true,
+      "ready_job_deduplicated": true,
+      "receipt_identity_matches": true,
+      "final_receipt_sha256_matches": true,
+      "source_id": "664281013778109217",
+      "transferred_bytes": 18403864,
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 13.88,
+      "automatic_failover_verified": true,
+      "adapter_attempts": [
+        {
+          "route": "pinterest_extractor",
+          "status": "unavailable",
+          "error": "TimeoutError"
+        },
+        {
+          "route": "pinterest_public_api",
+          "status": "acquired"
+        }
+      ]
+    },
+    {
+      "sample": "failover-snapchat",
+      "platform": "snapchat",
+      "source_url": "https://www.snapchat.com/spotlight/W7_EDlXWTBiXAEEniNoMPwAAYYWtidGhudGZpAX1TKn0JAX1TKnXJAAAAAA",
+      "observed_at": "2026-10-18T12:14:48.619570+00:00",
+      "namespace": "readiness-failover-snapchat",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": "timeout",
+      "discovery": {
+        "status": "known canonical fixture; no new discovery claim"
+      },
+      "download_cli_exit": 0,
+      "job": {
+        "id": "1186925b698e61aeaab5e53f",
+        "source_url": "https://www.snapchat.com/spotlight/W7_EDlXWTBiXAEEniNoMPwAAYYWtidGhudGZpAX1TKn0JAX1TKnXJAAAAAA",
+        "platform": "snapchat",
+        "status": "ready",
+        "message": "MP4 ready",
+        "bytes": 583697,
+        "width": 480,
+        "height": 880,
+        "duration": 4.641995,
+        "sha256": "d404e7d75eabf2c1645ef75b4bc9f8078549615d30101f0cf1bd405959d86cdb",
+        "audio": true,
+        "route": "snapchat_public_page",
+        "route_attempts": [
+          {
+            "route": "snapchat_extractor",
+            "status": "unavailable",
+            "error": "TimeoutError"
+          },
+          {
+            "route": "snapchat_public_page",
+            "status": "acquired"
+          }
+        ]
+      },
+      "fault_injections": [
+        {
+          "platform": "snapchat",
+          "mode": "timeout"
+        }
+      ],
+      "export_cli_exit": 0,
+      "export_sha256_matches": true,
+      "checked_export": true,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 480,
+          "height": 880
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac"
+        }
+      ],
+      "audio_expected": true,
+      "audio_expectation_matches": true,
+      "decode_sample_seconds": 1,
+      "decode_passed": true,
+      "no_overwrite_passed": true,
+      "namespace_isolation_passed": true,
+      "ready_job_deduplicated": true,
+      "receipt_identity_matches": true,
+      "final_receipt_sha256_matches": true,
+      "source_id": "W7_EDlXWTBiXAEEniNoMPwAAYYWtidGhudGZpAX1TKn0JAX1TKnXJAAAAAA",
+      "transferred_bytes": 583698,
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 21.78,
+      "automatic_failover_verified": true,
+      "adapter_attempts": [
+        {
+          "route": "snapchat_extractor",
+          "status": "unavailable",
+          "error": "TimeoutError"
+        },
+        {
+          "route": "snapchat_public_page",
+          "status": "acquired"
+        }
+      ]
+    },
+    {
+      "sample": "failover-twitch",
+      "platform": "twitch",
+      "source_url": "https://clips.twitch.tv/FaintLightGullWholeWheat",
+      "observed_at": "2026-10-18T12:15:10.395712+00:00",
+      "namespace": "readiness-failover-twitch",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": "timeout",
+      "discovery": {
+        "status": "known canonical fixture; no new discovery claim"
+      },
+      "download_cli_exit": 0,
+      "job": {
+        "id": "b9fbbe04a36e96af4814f470",
+        "source_url": "https://clips.twitch.tv/FaintLightGullWholeWheat",
+        "platform": "twitch",
+        "status": "ready",
+        "message": "MP4 ready",
+        "bytes": 16299421,
+        "width": 1920,
+        "height": 1080,
+        "duration": 32.099,
+        "sha256": "4057cefed283eb3547d7d6ac5f8eed55f0443cd38270a20d8ba7fc2ed25a5b59",
+        "audio": true,
+        "route": "twitch_public_graphql",
+        "route_attempts": [
+          {
+            "route": "twitch_extractor",
+            "status": "unavailable",
+            "error": "TimeoutError"
+          },
+          {
+            "route": "twitch_public_graphql",
+            "status": "acquired"
+          }
+        ]
+      },
+      "fault_injections": [
+        {
+          "platform": "twitch",
+          "mode": "timeout"
+        }
+      ],
+      "export_cli_exit": 0,
+      "export_sha256_matches": true,
+      "checked_export": true,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac"
+        }
+      ],
+      "audio_expected": true,
+      "audio_expectation_matches": true,
+      "decode_sample_seconds": 1,
+      "decode_passed": true,
+      "no_overwrite_passed": true,
+      "namespace_isolation_passed": true,
+      "ready_job_deduplicated": true,
+      "receipt_identity_matches": true,
+      "final_receipt_sha256_matches": true,
+      "source_id": "FaintLightGullWholeWheat",
+      "transferred_bytes": 16299328,
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 43.22,
+      "automatic_failover_verified": true,
+      "adapter_attempts": [
+        {
+          "route": "twitch_extractor",
+          "status": "unavailable",
+          "error": "TimeoutError"
+        },
+        {
+          "route": "twitch_public_graphql",
+          "status": "acquired"
+        }
+      ]
+    }
+  ],
+  "fail_closed": [
+    {
+      "sample": "failclosed-identity",
+      "platform": "pinterest",
+      "source_url": "https://www.pinterest.com/pin/664281013778109217/",
+      "observed_at": "2026-10-18T12:15:59.553131+00:00",
+      "namespace": "readiness-failclosed-identity",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": "identity",
+      "discovery": {
+        "status": "known canonical fixture; no new discovery claim"
+      },
+      "download_cli_exit": 1,
+      "job": {
+        "id": "9d581a1a711bdffb6e84ed2e",
+        "source_url": "https://www.pinterest.com/pin/664281013778109217/",
+        "platform": "pinterest",
+        "status": "failed",
+        "message": "Public source acquisition failed. The post may require login, be unavailable, or have no downloadable video.",
+        "route_attempts": [
+          {
+            "route": "pinterest_extractor",
+            "status": "rejected"
+          }
+        ],
+        "error_code": "acquisition_failed",
+        "failure_stage": "acquisition"
+      },
+      "fault_injections": [
+        {
+          "platform": "pinterest",
+          "mode": "identity"
+        }
+      ],
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 7.32,
+      "adapter_attempts": [
+        {
+          "route": "pinterest_extractor",
+          "status": "rejected",
+          "error": "ValueError"
+        }
+      ]
+    },
+    {
+      "sample": "failclosed-host",
+      "platform": "pinterest",
+      "source_url": "https://www.pinterest.com/pin/664281013778109217/",
+      "observed_at": "2026-10-18T12:16:06.873611+00:00",
+      "namespace": "readiness-failclosed-host",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": "host",
+      "discovery": {
+        "status": "known canonical fixture; no new discovery claim"
+      },
+      "download_cli_exit": 1,
+      "job": {
+        "id": "9d581a1a711bdffb6e84ed2e",
+        "source_url": "https://www.pinterest.com/pin/664281013778109217/",
+        "platform": "pinterest",
+        "status": "failed",
+        "message": "Public source acquisition failed. The post may require login, be unavailable, or have no downloadable video.",
+        "route_attempts": [
+          {
+            "route": "pinterest_extractor",
+            "status": "rejected"
+          }
+        ],
+        "error_code": "acquisition_failed",
+        "failure_stage": "acquisition"
+      },
+      "fault_injections": [
+        {
+          "platform": "pinterest",
+          "mode": "host"
+        }
+      ],
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 4.04,
+      "adapter_attempts": [
+        {
+          "route": "pinterest_extractor",
+          "status": "rejected",
+          "error": "ValueError"
+        }
+      ]
+    },
+    {
+      "sample": "failclosed-storage",
+      "platform": "pinterest",
+      "source_url": "https://www.pinterest.com/pin/664281013778109217/",
+      "observed_at": "2026-10-18T12:16:10.910475+00:00",
+      "namespace": "readiness-failclosed-storage",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": "storage",
+      "discovery": {
+        "status": "known canonical fixture; no new discovery claim"
+      },
+      "download_cli_exit": 1,
+      "job": {
+        "id": "9d581a1a711bdffb6e84ed2e",
+        "source_url": "https://www.pinterest.com/pin/664281013778109217/",
+        "platform": "pinterest",
+        "status": "failed",
+        "message": "Public source acquisition failed. The post may require login, be unavailable, or have no downloadable video.",
+        "route_attempts": [
+          {
+            "route": "pinterest_extractor",
+            "status": "failed"
+          }
+        ],
+        "error_code": "acquisition_failed",
+        "failure_stage": "acquisition"
+      },
+      "fault_injections": [
+        {
+          "platform": "pinterest",
+          "mode": "storage"
+        }
+      ],
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 4.22,
+      "adapter_attempts": [
+        {
+          "route": "pinterest_extractor",
+          "status": "failed",
+          "error": "OSError"
+        }
+      ]
+    }
+  ],
+  "recovery": [
+    {
+      "sample": "wait-reconnect",
+      "platform": "pinterest",
+      "source_url": "https://www.pinterest.com/pin/664281013778109217/",
+      "observed_at": "2026-10-18T12:16:15.483978+00:00",
+      "namespace": "readiness-wait-reconnect",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": "delay",
+      "discovery": {
+        "status": "known canonical fixture; no new discovery claim"
+      },
+      "download_cli_exit": 1,
+      "job": {
+        "id": "9d581a1a711bdffb6e84ed2e",
+        "source_url": "https://www.pinterest.com/pin/664281013778109217/",
+        "platform": "pinterest",
+        "status": "ready",
+        "message": "MP4 ready",
+        "bytes": 18403924,
+        "width": 1080,
+        "height": 1920,
+        "duration": 57.7,
+        "sha256": "4599502cb76586e25cf6b4b7383babb0254fff33717d0f0ea0c48f1536ed9a6c",
+        "audio": true,
+        "route": "pinterest_public_api",
+        "route_attempts": [
+          {
+            "route": "pinterest_extractor",
+            "status": "unavailable",
+            "error": "TimeoutError"
+          },
+          {
+            "route": "pinterest_public_api",
+            "status": "acquired"
+          }
+        ]
+      },
+      "wait_timed_out": true,
+      "fault_injections": [
+        {
+          "platform": "pinterest",
+          "mode": "delay"
+        }
+      ],
+      "export_cli_exit": 0,
+      "export_sha256_matches": true,
+      "checked_export": true,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 1080,
+          "height": 1920
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac"
+        }
+      ],
+      "audio_expected": true,
+      "audio_expectation_matches": true,
+      "decode_sample_seconds": 1,
+      "decode_passed": true,
+      "no_overwrite_passed": true,
+      "namespace_isolation_passed": true,
+      "ready_job_deduplicated": true,
+      "receipt_identity_matches": true,
+      "final_receipt_sha256_matches": true,
+      "source_id": "664281013778109217",
+      "transferred_bytes": 18403864,
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 36.29
+    },
+    {
+      "sample": "worker-interruption",
+      "observed_at": "2026-10-18T12:17:29.942362+00:00",
+      "platform": "pinterest",
+      "source_url": "https://www.pinterest.com/pin/664281013778109217/",
+      "namespace": "readiness-worker-interruption",
+      "fresh_empty_data_directory": true,
+      "execution": "installed CLI and real detached worker",
+      "injection": "SIGTERM of this probe worker session only after its primary pause marker",
+      "interrupted_status": "failed",
+      "interrupted_code": "interrupted",
+      "explicit_retry_same_job": true,
+      "final_status": "ready",
+      "route_attempts": [
+        {
+          "route": "pinterest_extractor",
+          "status": "unavailable",
+          "error": "TimeoutError"
+        },
+        {
+          "route": "pinterest_public_api",
+          "status": "acquired"
+        }
+      ],
+      "export_sha256_matches": true,
+      "corrupt_export_rejected": true,
+      "no_corrupt_export_or_partial": true
+    }
+  ],
+  "headline_formats": [
+    {
+      "sample": "youtube-short",
+      "platform": "youtube",
+      "source_url": "https://www.youtube.com/shorts/6F0e3UHcQkg",
+      "observed_at": "2026-10-18T12:17:33.865268+00:00",
+      "namespace": "readiness-youtube-short",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": null,
+      "discovery": {
+        "status": "discovered",
+        "query": "NASA rocket \"youtube.com/shorts/\"",
+        "reference": "https://aim.gov.in/pdf/space-module-level-2.pdf"
+      },
+      "download_cli_exit": 0,
+      "job": {
+        "id": "8d7476e463d3a73f570faf30",
+        "source_url": "https://www.youtube.com/watch?v=6F0e3UHcQkg",
+        "platform": "youtube",
+        "status": "ready",
+        "message": "MP4 ready",
+        "bytes": 4370979,
+        "width": 1080,
+        "height": 1920,
+        "duration": 15.20907,
+        "sha256": "eeb395a7802d87c69c2a37b68511b4722f40f4aa3fdaa6bef0859e1c62d0ace8",
+        "audio": true,
+        "route": "snapyt",
+        "route_attempts": [
+          {
+            "route": "snapyt",
+            "status": "acquired"
+          }
+        ]
+      },
+      "fault_injections": [],
+      "export_cli_exit": 0,
+      "export_sha256_matches": true,
+      "checked_export": true,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 1080,
+          "height": 1920
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac"
+        }
+      ],
+      "audio_expected": true,
+      "audio_expectation_matches": true,
+      "decode_sample_seconds": 1,
+      "decode_passed": true,
+      "no_overwrite_passed": true,
+      "namespace_isolation_passed": true,
+      "ready_job_deduplicated": true,
+      "receipt_identity_matches": true,
+      "final_receipt_sha256_matches": true,
+      "source_id": "6F0e3UHcQkg",
+      "transfers": [
+        {
+          "format_id": "137",
+          "bytes": 4116586,
+          "ext": "mp4",
+          "track": ""
+        },
+        {
+          "format_id": "140",
+          "bytes": 247018,
+          "ext": "m4a",
+          "track": ""
+        }
+      ],
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 23.72
+    },
+    {
+      "sample": "youtube-hd",
+      "platform": "youtube",
+      "source_url": "https://www.youtube.com/watch?v=BaW_jenozKc",
+      "observed_at": "2026-10-18T12:17:57.587053+00:00",
+      "namespace": "readiness-youtube-hd",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": null,
+      "discovery": {
+        "status": "known public upstream test video; rendition must be measured"
+      },
+      "download_cli_exit": 1,
+      "job": {
+        "id": "cfb326a281a3cc826f114e1f",
+        "source_url": "https://www.youtube.com/watch?v=BaW_jenozKc",
+        "platform": "youtube",
+        "status": "failed",
+        "message": "Public source acquisition failed. The post may require login, be unavailable, or have no downloadable video.",
+        "error_code": "acquisition_failed",
+        "failure_stage": "acquisition"
+      },
+      "fault_injections": [],
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 13.73,
+      "blocker": "The separate upstream test-video sample was unavailable through the installed worker; the successful 1080 x 1920 Shorts sample is separate.",
+      "attempts_this_session": 1,
+      "resume_condition": "A currently available landscape source and fresh installed acquisition/export proof."
+    },
+    {
+      "sample": "instagram-post",
+      "platform": "instagram",
+      "source_url": "https://www.instagram.com/p/DeWYHFHIkVC/",
+      "observed_at": "2026-10-18T12:18:11.315669+00:00",
+      "namespace": "readiness-instagram-post",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": null,
+      "discovery": {
+        "status": "known canonical fixture; no new discovery claim"
+      },
+      "download_cli_exit": 0,
+      "job": {
+        "id": "53869b3249b2758dd994de93",
+        "source_url": "https://www.instagram.com/p/DeWYHFHIkVC/",
+        "platform": "instagram",
+        "status": "ready",
+        "message": "MP4 ready",
+        "bytes": 10329647,
+        "width": 720,
+        "height": 1280,
+        "duration": 47.466667,
+        "sha256": "43d3b7fc940fafd5ac6cc3bc0d9d1fff602ffc9f7ac3c5eab73b729406cc0782",
+        "audio": true,
+        "route": "snapinsta",
+        "route_attempts": [
+          {
+            "route": "snapinsta",
+            "status": "acquired"
+          }
+        ]
+      },
+      "fault_injections": [],
+      "export_cli_exit": 0,
+      "export_sha256_matches": true,
+      "checked_export": true,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac"
+        }
+      ],
+      "audio_expected": true,
+      "audio_expectation_matches": true,
+      "decode_sample_seconds": 1,
+      "decode_passed": true,
+      "no_overwrite_passed": true,
+      "namespace_isolation_passed": true,
+      "ready_job_deduplicated": true,
+      "receipt_identity_matches": true,
+      "final_receipt_sha256_matches": true,
+      "source_id": "DeWYHFHIkVC",
+      "transferred_bytes": 10329436,
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 23.18,
+      "adapter_attempts": [
+        {
+          "route": "snapinsta",
+          "status": "acquired"
+        }
+      ]
+    },
+    {
+      "sample": "instagram-reel",
+      "platform": "instagram",
+      "source_url": "https://www.instagram.com/reel/C_bnaTAO2Ll/",
+      "observed_at": "2026-10-18T12:18:34.495201+00:00",
+      "namespace": "readiness-instagram-reel",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": null,
+      "discovery": {
+        "status": "discovered",
+        "query": "instagram carousel video nasa",
+        "reference": "https://jcom.sissa.it/article/pubid/JCOM_2506_2026_A08/"
+      },
+      "download_cli_exit": 0,
+      "job": {
+        "id": "d1868119dd41641874201072",
+        "source_url": "https://www.instagram.com/p/C_bnaTAO2Ll/",
+        "platform": "instagram",
+        "status": "ready",
+        "message": "MP4 ready",
+        "bytes": 3377242,
+        "width": 720,
+        "height": 1280,
+        "duration": 13.366667,
+        "sha256": "f2374051dc3e3110c74b658226578469c64370f608acb5caf5254fd6ba4f78d6",
+        "audio": true,
+        "route": "snapinsta",
+        "route_attempts": [
+          {
+            "route": "snapinsta",
+            "status": "acquired"
+          }
+        ]
+      },
+      "fault_injections": [],
+      "export_cli_exit": 0,
+      "export_sha256_matches": true,
+      "checked_export": true,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac"
+        }
+      ],
+      "audio_expected": true,
+      "audio_expectation_matches": true,
+      "decode_sample_seconds": 1,
+      "decode_passed": true,
+      "no_overwrite_passed": true,
+      "namespace_isolation_passed": true,
+      "ready_job_deduplicated": true,
+      "receipt_identity_matches": true,
+      "final_receipt_sha256_matches": true,
+      "source_id": "C_bnaTAO2Ll",
+      "transferred_bytes": 3377031,
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 32.49,
+      "adapter_attempts": [
+        {
+          "route": "snapinsta",
+          "status": "acquired"
+        }
+      ]
+    },
+    {
+      "sample": "instagram-mixed",
+      "platform": "instagram",
+      "source_url": "https://www.instagram.com/p/DeKe6teEpya/",
+      "observed_at": "2026-10-18T12:19:06.990537+00:00",
+      "namespace": "readiness-instagram-mixed",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": null,
+      "discovery": {
+        "status": "discovered; mixed-media description requires native verification",
+        "query": "instagram carousel video nasa",
+        "reference": "https://themineworks.com/blog/export-instagram-carousel-images-captions/"
+      },
+      "download_cli_exit": 1,
+      "job": {
+        "id": "160fbd94034ee7837b7ee9b6",
+        "source_url": "https://www.instagram.com/p/DeKe6teEpya/",
+        "platform": "instagram",
+        "status": "failed",
+        "message": "Public source acquisition failed. The post may require login, be unavailable, or have no downloadable video.",
+        "route_attempts": [
+          {
+            "route": "snapinsta",
+            "status": "rejected"
+          }
+        ],
+        "error_code": "acquisition_failed",
+        "failure_stage": "acquisition"
+      },
+      "fault_injections": [],
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 4.7,
+      "adapter_attempts": [
+        {
+          "route": "snapinsta",
+          "status": "rejected",
+          "error": "ValueError"
+        }
+      ],
+      "blocker": "The observed 20-slide carousel has one video and 19 images. Its child media ID differs from the parent shortcode; the returned form has no parent-post identity attributes, and the primary identity validator rejects it before any fallback.",
+      "attempts_this_session": 1,
+      "resume_condition": "A trustworthy selected-parent/child mapping, then a scoped fix and fresh installed acquisition/export proof; do not weaken the identity check."
+    },
+    {
+      "sample": "tiktok-canonical",
+      "platform": "tiktok",
+      "source_url": "https://www.tiktok.com/@patroxofficial/video/6742501081818877190",
+      "observed_at": "2026-10-18T12:19:11.691468+00:00",
+      "namespace": "readiness-tiktok-canonical",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": null,
+      "discovery": {
+        "status": "known canonical fixture; no new discovery claim"
+      },
+      "download_cli_exit": 0,
+      "job": {
+        "id": "55d727833ee11a09fc29d111",
+        "source_url": "https://www.tiktok.com/@patroxofficial/video/6742501081818877190",
+        "platform": "tiktok",
+        "status": "ready",
+        "message": "MP4 ready",
+        "bytes": 2748534,
+        "width": 540,
+        "height": 960,
+        "duration": 27.466667,
+        "sha256": "13222d719676dd80b804321f07a91b013c585a673615af8fe9e859cc339b07a7",
+        "audio": true,
+        "route": "tikwm",
+        "route_attempts": [
+          {
+            "route": "tikwm",
+            "status": "acquired"
+          }
+        ]
+      },
+      "fault_injections": [],
+      "export_cli_exit": 0,
+      "export_sha256_matches": true,
+      "checked_export": true,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 540,
+          "height": 960
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac"
+        }
+      ],
+      "audio_expected": true,
+      "audio_expectation_matches": true,
+      "decode_sample_seconds": 1,
+      "decode_passed": true,
+      "no_overwrite_passed": true,
+      "namespace_isolation_passed": true,
+      "ready_job_deduplicated": true,
+      "receipt_identity_matches": true,
+      "final_receipt_sha256_matches": true,
+      "source_id": "6742501081818877190",
+      "transferred_bytes": 2748647,
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 20.3,
+      "adapter_attempts": [
+        {
+          "route": "tikwm",
+          "status": "acquired"
+        }
+      ]
+    },
+    {
+      "sample": "tiktok-share",
+      "platform": "tiktok",
+      "source_url": "https://vm.tiktok.com/ZMrLr36o8/",
+      "observed_at": "2026-10-18T12:19:31.989058+00:00",
+      "namespace": "readiness-tiktok-share",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": null,
+      "discovery": {
+        "status": "discovered",
+        "query": "https://vm.tiktok.com/ NASA",
+        "reference": "https://www.labjor.unicamp.br/wp-content/uploads/livro_producao_e_circulacao_cientifica/ebook.pdf"
+      },
+      "download_cli_exit": 1,
+      "job": {
+        "id": "c23107a555a886a8825478ee",
+        "source_url": "https://vm.tiktok.com/ZMrLr36o8/",
+        "platform": "tiktok",
+        "status": "failed",
+        "message": "Public source acquisition failed. The post may require login, be unavailable, or have no downloadable video.",
+        "route_attempts": [
+          {
+            "route": "tikwm",
+            "status": "unavailable"
+          },
+          {
+            "route": "tiktok_extractor",
+            "status": "unavailable"
+          }
+        ],
+        "error_code": "acquisition_failed",
+        "failure_stage": "acquisition"
+      },
+      "fault_injections": [],
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 12.62,
+      "adapter_attempts": [
+        {
+          "route": "tikwm",
+          "status": "unavailable",
+          "error": "ProviderUnavailable"
+        },
+        {
+          "route": "tiktok_extractor",
+          "status": "unavailable",
+          "error": "CalledProcessError"
+        }
+      ],
+      "blocker": "The selected historical public short-share URL failed acquisition; no resolved canonical-post binding or transferable alternative was established.",
+      "attempts_this_session": 1,
+      "resume_condition": "A live share URL with independently established canonical identity, then fresh installed canonical/share acquisition and matching identity checks."
+    },
+    {
+      "sample": "x-canonical",
+      "platform": "x",
+      "source_url": "https://x.com/TopHeroes_/status/2001950365332455490",
+      "observed_at": "2026-10-18T12:19:44.608829+00:00",
+      "namespace": "readiness-x-canonical",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": null,
+      "discovery": {
+        "status": "known canonical fixture; no new discovery claim"
+      },
+      "download_cli_exit": 0,
+      "job": {
+        "id": "5830519ba6811641f23e27e7",
+        "source_url": "https://x.com/TopHeroes_/status/2001950365332455490",
+        "platform": "x",
+        "status": "ready",
+        "message": "MP4 ready",
+        "bytes": 3407167,
+        "width": 720,
+        "height": 720,
+        "duration": 30.325261,
+        "sha256": "0dc7e9c7c3d0f3f2789665e43ae8ad510fff17a24b71fe6af3a03618e4ba2737",
+        "audio": true,
+        "route": "x_syndication",
+        "route_attempts": [
+          {
+            "route": "x_syndication",
+            "status": "acquired"
+          }
+        ]
+      },
+      "fault_injections": [],
+      "export_cli_exit": 0,
+      "export_sha256_matches": true,
+      "checked_export": true,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 720,
+          "height": 720
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac"
+        }
+      ],
+      "audio_expected": true,
+      "audio_expectation_matches": true,
+      "decode_sample_seconds": 1,
+      "decode_passed": true,
+      "no_overwrite_passed": true,
+      "namespace_isolation_passed": true,
+      "ready_job_deduplicated": true,
+      "receipt_identity_matches": true,
+      "final_receipt_sha256_matches": true,
+      "source_id": "2001950365332455490",
+      "transferred_bytes": 3393585,
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 26.84,
+      "adapter_attempts": [
+        {
+          "route": "x_syndication",
+          "status": "acquired"
+        }
+      ]
+    },
+    {
+      "sample": "x-video2",
+      "platform": "x",
+      "source_url": "https://x.com/buildingisgreen/status/1793226866335076588/video/2",
+      "observed_at": "2026-10-18T12:20:11.453448+00:00",
+      "namespace": "readiness-x-video2",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": null,
+      "discovery": {
+        "status": "discovered; attachment order requires native verification",
+        "query": "https://x.com/ /video/2 photo",
+        "reference": "https://life-mybuildingisgreen.eu/docs/Presentacion-Taller-AECID-ES.pdf"
+      },
+      "download_cli_exit": 0,
+      "job": {
+        "id": "62c19185d8c2490bf6710284",
+        "source_url": "https://x.com/buildingisgreen/status/1793226866335076588/video/2",
+        "platform": "x",
+        "status": "ready",
+        "message": "MP4 ready",
+        "bytes": 1025857,
+        "width": 1280,
+        "height": 720,
+        "duration": 6.873107,
+        "sha256": "db5a1e0e04a24d7b2a483b766b1efec58e635863ee1208547c7cf79fac96c60c",
+        "audio": true,
+        "route": "x_syndication",
+        "route_attempts": [
+          {
+            "route": "x_syndication",
+            "status": "acquired"
+          }
+        ]
+      },
+      "fault_injections": [],
+      "export_cli_exit": 0,
+      "export_sha256_matches": true,
+      "checked_export": true,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac"
+        }
+      ],
+      "audio_expected": true,
+      "audio_expectation_matches": true,
+      "decode_sample_seconds": 1,
+      "decode_passed": true,
+      "no_overwrite_passed": true,
+      "namespace_isolation_passed": true,
+      "ready_job_deduplicated": true,
+      "receipt_identity_matches": true,
+      "final_receipt_sha256_matches": true,
+      "source_id": "1793226866335076588-video2",
+      "transferred_bytes": 1025256,
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 18.6,
+      "adapter_attempts": [
+        {
+          "route": "x_syndication",
+          "status": "acquired"
+        }
+      ]
+    },
+    {
+      "sample": "facebook-watch",
+      "platform": "facebook",
+      "source_url": "https://www.facebook.com/watch/?v=10155529876156509",
+      "observed_at": "2026-10-18T12:20:30.050817+00:00",
+      "namespace": "readiness-facebook-watch",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": null,
+      "discovery": {
+        "status": "known canonical fixture; no new discovery claim"
+      },
+      "download_cli_exit": 0,
+      "job": {
+        "id": "313b8c629d1574a12a59d0a3",
+        "source_url": "https://www.facebook.com/watch/?v=10155529876156509",
+        "platform": "facebook",
+        "status": "ready",
+        "message": "MP4 ready",
+        "bytes": 12474253,
+        "width": 1080,
+        "height": 1080,
+        "duration": 44.330667,
+        "sha256": "64708e1dcc19f2af4b0ee54af9e1e1ed021b3ebea68d407eb29591b916f5d989",
+        "audio": true,
+        "route": "facebook_extractor",
+        "route_attempts": [
+          {
+            "route": "facebook_extractor",
+            "status": "acquired"
+          }
+        ]
+      },
+      "fault_injections": [],
+      "export_cli_exit": 0,
+      "export_sha256_matches": true,
+      "checked_export": true,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "vp9",
+          "width": 1080,
+          "height": 1080
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac"
+        }
+      ],
+      "audio_expected": true,
+      "audio_expectation_matches": true,
+      "decode_sample_seconds": 1,
+      "decode_passed": true,
+      "no_overwrite_passed": true,
+      "namespace_isolation_passed": true,
+      "ready_job_deduplicated": true,
+      "receipt_identity_matches": true,
+      "final_receipt_sha256_matches": true,
+      "source_id": "10155529876156509",
+      "transferred_bytes": 12474254,
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 25.67,
+      "adapter_attempts": [
+        {
+          "route": "facebook_extractor",
+          "status": "acquired"
+        }
+      ]
+    }
+  ],
+  "discovery_and_metadata": [
+    {
+      "source": "pinterest",
+      "query": "paper airplane folding video",
+      "observed_at": "2026-10-18T12:20:56.604056+00:00",
+      "results": [
+        {
+          "url": "https://www.pinterest.com/pin/1100004277731493793/",
+          "title": "Visit TikTok to discover videos! | Foldable paper airplane, Silent sonic..."
+        },
+        {
+          "url": "https://www.pinterest.com/pin/425590233548042844/",
+          "title": "Video: How to Fold the Longest-Flying Paper Airplanes"
+        },
+        {
+          "url": "https://www.pinterest.com/pin/298856125290563650/",
+          "title": "This kind of paper airplane is really fun. Not only is it easy to fold, but..."
+        }
+      ],
+      "sources": [
+        {
+          "id": "pinterest",
+          "label": "Pinterest video pins",
+          "status": "ok",
+          "result_count": 3,
+          "message": "",
+          "mode": "indexed"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "source": "mastodon",
+      "query": "music video",
+      "observed_at": "2026-10-18T12:21:03.193668+00:00",
+      "results": [
+        {
+          "url": "https://mastodon.social/@babel/116924305277526752",
+          "title": "babel: \"Forums, Reading, and Music on the Fediverse...\" - Mastodon"
+        },
+        {
+          "url": "https://mastodon.social/@coroot/117354925009145969",
+          "title": "Coroot: \"Robots, solar flare keynotes, database rock music\u2026\""
+        }
+      ],
+      "sources": [
+        {
+          "id": "mastodon",
+          "label": "Mastodon \u00b7 mastodon.social",
+          "status": "ok",
+          "result_count": 2,
+          "message": "",
+          "mode": "indexed"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "source": "youtube",
+      "query": "NASA rocket launch Shorts",
+      "observed_at": "2026-10-18T12:21:08.556169+00:00",
+      "results": [
+        {
+          "url": "https://www.youtube.com/watch?v=_SnA67I3k3U",
+          "title": "NASA Rocket Launch #shorts"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=nrD3OJ62OOk",
+          "title": "Every Step of NASA Successful Rocket launch #shorts..."
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=yepp-k9MlEI",
+          "title": "NASA Rocket Launch #shorts"
+        }
+      ],
+      "sources": [
+        {
+          "id": "youtube",
+          "label": "YouTube & Shorts",
+          "status": "ok",
+          "result_count": 3,
+          "message": "",
+          "mode": "indexed"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "platform": "instagram",
+      "source_url": "https://www.instagram.com/p/DeKe6teEpya/",
+      "observed_at": "2026-10-18T12:21:12.662329+00:00",
+      "media_types": [
+        "video",
+        "image",
+        "image",
+        "image",
+        "image",
+        "image",
+        "image",
+        "image",
+        "image",
+        "image",
+        "image",
+        "image",
+        "image",
+        "image",
+        "image",
+        "image",
+        "image",
+        "image",
+        "image",
+        "image"
+      ],
+      "identity_attributes": [
+        {
+          "data-media-id": "4002147050057771603",
+          "data-media-index": "0",
+          "data-media-type": "video"
+        },
+        {
+          "data-media-id": "4002147004007844113",
+          "data-media-index": "1",
+          "data-media-type": "image"
+        },
+        {
+          "data-media-id": "4002147000249952164",
+          "data-media-index": "2",
+          "data-media-type": "image"
+        },
+        {
+          "data-media-id": "4002147010852954974",
+          "data-media-index": "3",
+          "data-media-type": "image"
+        },
+        {
+          "data-media-id": "4002147017916356694",
+          "data-media-index": "4",
+          "data-media-type": "image"
+        },
+        {
+          "data-media-id": "4002147023175911768",
+          "data-media-index": "5",
+          "data-media-type": "image"
+        },
+        {
+          "data-media-id": "4002147031463821850",
+          "data-media-index": "6",
+          "data-media-type": "image"
+        },
+        {
+          "data-media-id": "4002147034307519109",
+          "data-media-index": "7",
+          "data-media-type": "image"
+        },
+        {
+          "data-media-id": "4002147040229973562",
+          "data-media-index": "8",
+          "data-media-type": "image"
+        },
+        {
+          "data-media-id": "4002147045942596462",
+          "data-media-index": "9",
+          "data-media-type": "image"
+        },
+        {
+          "data-media-id": "4002147059263813175",
+          "data-media-index": "10",
+          "data-media-type": "image"
+        },
+        {
+          "data-media-id": "4002147058877843426",
+          "data-media-index": "11",
+          "data-media-type": "image"
+        },
+        {
+          "data-media-id": "4002147076535992038",
+          "data-media-index": "12",
+          "data-media-type": "image"
+        },
+        {
+          "data-media-id": "4002147071066610806",
+          "data-media-index": "13",
+          "data-media-type": "image"
+        },
+        {
+          "data-media-id": "4002147079069134895",
+          "data-media-index": "14",
+          "data-media-type": "image"
+        },
+        {
+          "data-media-id": "4002147081568970356",
+          "data-media-index": "15",
+          "data-media-type": "image"
+        },
+        {
+          "data-media-id": "4002147090939076108",
+          "data-media-index": "16",
+          "data-media-type": "image"
+        },
+        {
+          "data-media-id": "4002147090695936174",
+          "data-media-index": "17",
+          "data-media-type": "image"
+        },
+        {
+          "data-media-id": "4002147098329552545",
+          "data-media-index": "18",
+          "data-media-type": "image"
+        },
+        {
+          "data-media-id": "4002147096173536002",
+          "data-media-index": "19",
+          "data-media-type": "image"
+        }
+      ],
+      "identity_attribute_keys": [],
+      "error": "ValueError"
+    },
+    {
+      "platform": "instagram",
+      "source_url": "https://www.instagram.com/p/Dbd3EBdnW_u/",
+      "observed_at": "2026-10-18T12:21:14.014048+00:00",
+      "media_types": [
+        "image"
+      ],
+      "identity_attributes": [
+        {
+          "data-media-id": "3953558216907780078",
+          "data-media-index": "0",
+          "data-media-type": "image"
+        }
+      ],
+      "identity_attribute_keys": [],
+      "selected_video_indexes": [],
+      "video_selection": "No native video in the measured response; no successful video identity check claimed."
+    },
+    {
+      "account_url": "https://www.youtube.com/@NASA",
+      "count_requested": 2,
+      "observed_at": "2026-10-18T12:21:16.598990+00:00",
+      "error": "SearchUnavailable"
+    },
+    {
+      "account_url": "https://www.instagram.com/nasa/",
+      "count_requested": 2,
+      "observed_at": "2026-10-18T12:21:21.614860+00:00",
+      "error": "SearchUnavailable"
+    }
+  ],
+  "supplemental": [
+    {
+      "sample": "instagram-image-only",
+      "platform": "instagram",
+      "source_url": "https://www.instagram.com/p/Dbd3EBdnW_u/",
+      "observed_at": "2026-10-18T12:23:49.124943+00:00",
+      "namespace": "readiness-instagram-image-only",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": null,
+      "discovery": {
+        "status": "public SnapInsta metadata measured one image and no video"
+      },
+      "download_cli_exit": 1,
+      "job": {
+        "id": "687b208eb6684a41483c5ee9",
+        "source_url": "https://www.instagram.com/p/Dbd3EBdnW_u/",
+        "platform": "instagram",
+        "status": "failed",
+        "message": "Public source acquisition failed. The post may require login, be unavailable, or have no downloadable video.",
+        "route_attempts": [
+          {
+            "route": "snapinsta",
+            "status": "unavailable"
+          },
+          {
+            "route": "instagram_extractor",
+            "status": "unavailable"
+          }
+        ],
+        "error_code": "acquisition_failed",
+        "failure_stage": "acquisition"
+      },
+      "fault_injections": [],
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 15.47
+    },
+    {
+      "sample": "pinterest-discovered",
+      "platform": "pinterest",
+      "source_url": "https://www.pinterest.com/pin/425590233548042844/",
+      "observed_at": "2026-10-18T12:24:04.609555+00:00",
+      "namespace": "readiness-pinterest-discovered",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": null,
+      "discovery": {
+        "status": "installed Client.search returned this pin",
+        "query": "paper airplane folding video",
+        "result_index": 1,
+        "result_title": "Video: How to Fold the Longest-Flying Paper Airplanes"
+      },
+      "download_cli_exit": 1,
+      "job": {
+        "id": "e8fce69f6240267bc71f82e2",
+        "source_url": "https://www.pinterest.com/pin/425590233548042844/",
+        "platform": "pinterest",
+        "status": "failed",
+        "message": "Public source acquisition failed. The post may require login, be unavailable, or have no downloadable video.",
+        "route_attempts": [
+          {
+            "route": "pinterest_extractor",
+            "status": "unavailable"
+          },
+          {
+            "route": "pinterest_public_api",
+            "status": "unavailable"
+          }
+        ],
+        "error_code": "acquisition_failed",
+        "failure_stage": "acquisition"
+      },
+      "fault_injections": [],
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 10.1
+    },
+    {
+      "sample": "pinterest-discovered-2",
+      "platform": "pinterest",
+      "source_url": "https://www.pinterest.com/pin/298856125290563650/",
+      "observed_at": "2026-10-18T12:24:14.710620+00:00",
+      "namespace": "readiness-pinterest-discovered-2",
+      "fresh_empty_data_directory": true,
+      "execution": "installed JSON CLI with real detached worker",
+      "primary_fault": null,
+      "discovery": {
+        "status": "installed Client.search returned this pin",
+        "query": "paper airplane folding video",
+        "result_index": 2
+      },
+      "download_cli_exit": 0,
+      "job": {
+        "id": "3e29e68e3d26e000d08b052e",
+        "source_url": "https://www.pinterest.com/pin/298856125290563650/",
+        "platform": "pinterest",
+        "status": "ready",
+        "message": "MP4 ready",
+        "bytes": 5094001,
+        "width": 720,
+        "height": 1280,
+        "duration": 33.879002,
+        "sha256": "9aac322848f48e4e9c95b19bf5a95defb6b5e9862bdb462d583ed9de592fc18c",
+        "audio": true,
+        "route": "pinterest_extractor",
+        "route_attempts": [
+          {
+            "route": "pinterest_extractor",
+            "status": "acquired"
+          }
+        ]
+      },
+      "fault_injections": [],
+      "export_cli_exit": 0,
+      "export_sha256_matches": true,
+      "checked_export": true,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac"
+        }
+      ],
+      "audio_expected": true,
+      "audio_expectation_matches": true,
+      "decode_sample_seconds": 1,
+      "decode_passed": true,
+      "no_overwrite_passed": true,
+      "namespace_isolation_passed": true,
+      "ready_job_deduplicated": true,
+      "receipt_identity_matches": true,
+      "final_receipt_sha256_matches": true,
+      "source_id": "298856125290563650",
+      "transferred_bytes": 5094001,
+      "failed_partial_files_absent": true,
+      "elapsed_seconds": 31.04
+    },
+    {
+      "sample": "mastodon-audio-metadata-0",
+      "platform": "mastodon",
+      "source_url": "https://mastodon.social/@babel/116924305277526752",
+      "discovery": {
+        "status": "installed Client.search returned this post",
+        "query": "music video"
+      },
+      "observed_at": "2026-10-18T12:24:46.836985+00:00",
+      "returned_url": "https://mastodon.social/@babel/116924305277526752",
+      "attachment_types": []
+    },
+    {
+      "sample": "mastodon-audio-metadata-1",
+      "platform": "mastodon",
+      "source_url": "https://mastodon.social/@coroot/117354925009145969",
+      "discovery": {
+        "status": "installed Client.search returned this post",
+        "query": "music video"
+      },
+      "observed_at": "2026-10-18T12:24:47.293862+00:00",
+      "returned_url": "https://mastodon.social/@coroot/117354925009145969",
+      "attachment_types": [
+        "image"
+      ]
+    },
+    {
+      "sample": "x-selected-attachment-metadata",
+      "platform": "x",
+      "source_url": "https://x.com/buildingisgreen/status/1793226866335076588/video/2",
+      "observed_at": "2026-10-18T12:24:47.526645+00:00",
+      "native_attachment_types": [
+        "photo",
+        "video"
+      ],
+      "returned_post_id": "1793226866335076588",
+      "selected_display_id": "1793226866335076588",
+      "selected_media_id": "1793222627235880964",
+      "selected_format_id": "http-2176",
+      "selected_width": 1280,
+      "selected_height": 720,
+      "selected_url_matches_second_native_attachment": true
+    }
+  ],
+  "additional_discovery_verified": {
+    "pinterest_native_video_pin": true,
+    "mastodon_audio_video": false
+  },
+  "limits": [
+    "Per-sample observations, not platform-wide uptime or exhaustive format guarantees.",
+    "LinkedIn retains a historical direct fallback success but no fresh installed failover success in this run.",
+    "TikTok, X and Facebook alternatives retain prior unavailable states; no new transferable fallback is claimed. Reddit remains unavailable.",
+    "The independent YouTube connector is unverified without an actual operator-owned instance. SnapYT relay switching is not an independent provider.",
+    "Recognized share/attachment URL syntax is separate from demonstrated selected-post binding and native format coverage.",
+    "The Mastodon fallback sample remains natively silent gifv. Audio-video and arbitrary federation are not demonstrated by it.",
+    "One indexed Pinterest native-video pin completed the installed acquisition/export path; this is a narrow discovery sample.",
+    "Fresh YouTube and Instagram account-sample attempts returned SearchUnavailable; earlier account checks remain historical.",
+    "The fresh YouTube Shorts audio track had an empty relay language/track label; audio presence and stream-copy handling passed, but original-language identity was not independently established.",
+    "HLS/DASH, optional new integrations and UI publication remain outside this candidate."
+  ]
+}
