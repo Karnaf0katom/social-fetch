@@ -28,7 +28,7 @@
     "tests/test_reddit_acquisition.py": "5f002d4fa7365807959dfa25b46a6458ea48c6baa89e0a232ffc57492a57c3f9",
     "tests/test_linkedin_acquisition.py": "3f2fb63bb0b5cba9309ef88915768533f825699311de9fdb86454106befd16db",
     "tests/test_headline_fallbacks.py": "03a081714cd7e4b10bcf687c09dee012c854e70c6c0b9f89f1fd8dae2ee8aa33",
-    "README.md": "bd24fd17937fbbfcdb0fea56b7cf1d76a2590f3ab063f6443d56cb11d12b807b",
+    "README.md": "f2e20741f9a9a743107f95e21b4f11993edb50f53b92d80e645a7487ca652b2f",
     "LICENSE": "99635d223f61001e8d09bfa2acb5ad0ca839e0f6edfae2b9ba6464427431e278",
     "CHANGELOG.md": "34ea11f3873d3402ebffa05f402b8486def96fec8e47a0bbd386c10de73ecc77",
     "pyproject.toml": "cc24c6b0c4e26529f44e85bcf82e088bdc5086c20750704e712ba4198658b9f7",

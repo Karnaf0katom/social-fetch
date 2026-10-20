@@ -12,6 +12,9 @@ relay services. Those routes need no personal login, browser cookies or paid API
 key. The relay servers are external dependencies; their server code is outside
 this MIT client repository. X/Facebook use attributed yt-dlp routes.
 
+**YouTube's independent fallback requires a full, separately deployed Cobalt
+server.** See [YouTube fallback setup](#youtube-fallback-setup) before relying on it.
+
 ## Install
 
 Requires **Linux, Python 3.10+, Git, FFmpeg/ffprobe, outbound HTTPS and 9 GiB free
@@ -94,7 +97,7 @@ Saved media remains until you delete it; manage retention and disk space yoursel
 
 | Source | Measured scope |
 | --- | --- |
-| `youtube` | Watch, Shorts and share URLs; SnapYT media relay and assigned-server switching. Optional operator-owned Cobalt remains unverified live. |
+| `youtube` | Watch, Shorts and share URLs; SnapYT media relay and assigned-server switching. Independent fallback requires a separately deployed Cobalt server; unverified live. |
 | `instagram` | Single posts/Reels and bounded account samples through SnapInsta.lc. Mixed carousels remain unverified. |
 | `tiktok` | TikWM and SSSTik; canonical and selected `vt`/`vm`/`/t/` share samples. |
 | `x` | Public progressive MP4 through yt-dlp or FixupX; selected attachment ordering is preserved. |
@@ -129,6 +132,23 @@ select those providers through `FOOTAGE_SEARCH_PROVIDER=brave|serper` and
 `BRAVE_SEARCH_API_KEY` / `SERPER_API_KEY`. The default needs neither.
 Sources retain their URLs and attribution; public availability does not itself
 grant permission to reuse downloaded media.
+
+## YouTube fallback setup
+
+SnapYT is the default YouTube route. Its assigned-server switching stays within
+SnapYT; the independent fallback requires you to deploy and maintain a complete
+**Cobalt API server**. Installing social-fetch does not install or start that
+server, and no hosted Cobalt instance is supplied or selected automatically.
+
+1. Deploy the backend using [Cobalt's server setup guide](https://github.com/imputnet/cobalt/blob/main/docs/run-an-instance.md), which includes Docker Compose instructions.
+2. Serve its API and proxied MP4 downloads from the same HTTPS origin on port 443.
+3. Set `SOCIAL_FETCH_COBALT_URL` to your server's HTTPS origin, for example
+   `https://cobalt.example.com`, with no path or query string.
+
+The connector requests a proxied MP4 tunnel and rejects direct Googlevideo links
+or downloads/redirects to another origin. It has offline checks only and remains
+**unverified live**. If SnapYT is unavailable and no compatible Cobalt server is
+configured, there is no independent YouTube fallback ready to use.
 
 ## Troubleshooting
 
