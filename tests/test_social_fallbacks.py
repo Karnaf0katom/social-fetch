@@ -116,15 +116,6 @@ def test_tiktok_observed_native_delivery_does_not_admit_the_whole_website():
     with pytest.raises(ValueError): download.delivery_url('tiktok', 'https://evil.tiktok.com/video.mp4')
 
 
-def test_x_video_selector_preserves_attachment_order_and_post_id(tmp_path, monkeypatch):
-    link = download_link(X_URL)
-    data = {'code': 200, 'tweet': {'id': '12345678', 'media': {
-        'all': [{'type': 'photo'}, {'type': 'video', 'url': 'https://video.twimg.com/second.mp4'}]}}}
-    monkeypatch.setattr(fallback, 'document', lambda *a, **k: json.dumps(data))
-    monkeypatch.setattr(fallback, 'transfer', lambda l, u, p: u)
-    assert fallback.x_download(link, tmp_path).endswith('/second.mp4')
-    data['tweet']['id'] = '12345679'
-    with pytest.raises(ValueError, match='another post'): fallback.x_download(link, tmp_path)
 
 
 def test_pinterest_native_metadata_is_bound_to_pin(tmp_path, monkeypatch):

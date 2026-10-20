@@ -6,16 +6,11 @@ The manifest retains source identity and captions, never temporary download URLs
 """
 from __future__ import annotations
 
-import argparse
 import base64
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone
 import hashlib
 from html.parser import HTMLParser
 import json
-from pathlib import Path
 import re
-import threading
 import time
 from urllib.parse import parse_qs, urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
@@ -267,92 +262,5 @@ def download(row, output):
     return {**receipt, "delivery": "website_delivery", "transfer_seconds": round(time.monotonic() - started, 2)}
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("urls", nargs="*", help="Public Instagram post/Reel URLs")
-    parser.add_argument("--profile", help="Discover a sample of public profile videos (default: 5)")
-    scope = parser.add_mutually_exclusive_group()
-    scope.add_argument("--limit", type=int, help="Maximum profile videos to acquire (default: 5)")
-    scope.add_argument("--all", action="store_true", help="Explicitly acquire the entire public profile")
-    parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--cached-pages", type=Path, help="Reuse this run's already acquired profile pages")
-    parser.add_argument("--workers", type=int, choices=(1, 2), default=2)
-    args = parser.parse_args()
-    if not args.urls and not args.profile:
-        parser.error("Provide at least one post URL or --profile")
-    if (args.limit is not None or args.all) and not args.profile:
-        parser.error("--limit and --all apply to --profile")
-    if args.limit is not None and args.limit < 1:
-        parser.error("--limit must be positive")
-    args.out.mkdir(parents=True, exist_ok=True)
-    (args.out / "source").mkdir(exist_ok=True)
-    rows, discovery = [], None
-    for url in args.urls:
-        code = post_code(url)
-        rows.extend(videos(Form(page("/process", {"q": url, "scope": "home", "lang": "en"})), code))
-    if args.profile:
-        limit = None if args.all else (args.limit if args.limit is not None else 5)
-        discovered, discovery = discover_profile(args.profile, args.cached_pages, limit)
-        rows.extend(discovered)
-    rows = list({(row["shortcode"], row["index"]): row for row in rows}.values())
-    if not rows:
-        raise ValueError("No public videos were returned")
-    path = args.out / "downloads.json"
-    previous = json.loads(path.read_text()) if path.exists() else {"items": []}
-    existing = {(r["shortcode"], r["index"]): r
-                for r in previous.get("archived_items", []) + previous["items"]}
-    first = args.out / "requested-post.json"
-    if first.exists():
-        receipt = json.loads(first.read_text())
-        existing[(receipt["shortcode"], 0)] = {**receipt, "status": "downloaded", "index": 0}
-    items = []
-    for row in rows:
-        prior = existing.get((row["shortcode"], row["index"]), {})
-        file = args.out / prior.get("file", "source/absent")
-        retained = {k: prior[k] for k in ("status", "file", "bytes", "sha256", "delivery", "transfer_seconds") if k in prior}
-        if not file.is_file() or file.stat().st_size != prior.get("bytes"):
-            retained = {}
-        items.append({**{k: v for k, v in row.items() if k not in {"collection", "media_url", "poster_url"}},
-                      "status": "pending", **retained})
-    active_keys = {(row["shortcode"], row["index"]) for row in rows}
-    archived = [receipt for key, receipt in existing.items() if key not in active_keys]
-    manifest = {"website": SITE + "/", "profile": args.profile, "discovery": discovery,
-                "started_at": datetime.now(timezone.utc).isoformat(), "items": items,
-                "archived_items": archived}
-    lock = threading.Lock()
-
-    def save():
-        temporary = path.with_suffix(".json.tmp")
-        temporary.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
-        temporary.replace(path)
-
-    save()
-
-    def acquire(number, row):
-        item = items[number]
-        if item["status"] == "downloaded":
-            return
-        try:
-            receipt = download(row, args.out)
-        except Exception as error:
-            receipt = {"status": "failed", "error": str(error).split("https://")[0][:300]}
-        with lock:
-            item.update(receipt)
-            save()
-            complete = sum(i["status"] == "downloaded" for i in items)
-        print(f"{item['status']} {item['shortcode']} {item.get('bytes', 0)} bytes; {complete}/{len(items)} saved"
-              + ("; " + item["error"] if item.get("error") else ""), flush=True)
-
-    with ThreadPoolExecutor(max_workers=args.workers) as executor:
-        for future in as_completed([executor.submit(acquire, n, row) for n, row in enumerate(rows)]):
-            future.result()
-    manifest["finished_at"] = datetime.now(timezone.utc).isoformat()
-    save()
-    failed = sum(item["status"] != "downloaded" for item in items)
-    print(json.dumps({"discovered": len(items), "downloaded": len(items) - failed, "failed": failed,
-                      "bytes": sum(item.get("bytes", 0) for item in items), "manifest": str(path)}), flush=True)
-    return bool(failed)
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())

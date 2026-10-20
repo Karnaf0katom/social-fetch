@@ -454,11 +454,10 @@ class FootageSearch:
         self._slots = threading.BoundedSemaphore(2)
 
     @classmethod
-    def from_env(cls, *, include_catalogs: bool = True) -> 'FootageSearch':
+    def from_env(cls, *, include_catalogs: bool = False) -> 'FootageSearch':
         catalogs = {}
         if include_catalogs:
-            from social_fetch.catalogs import catalogs_from_env
-            catalogs = catalogs_from_env()
+            raise ValueError('Native catalogs are outside the standalone social package.')
         choice = os.environ.get('FOOTAGE_SEARCH_PROVIDER', 'auto').strip().lower() or 'auto'
         brave = os.environ.get('BRAVE_SEARCH_API_KEY') or os.environ.get('BRAVE_API_KEY') or ''
         serper = os.environ.get('SERPER_API_KEY') or ''
@@ -495,7 +494,7 @@ class FootageSearch:
                count: int = 24, namespace: str = '', source: str = 'web',
                sites: list[str] | tuple[str, ...] = (),
                selected_sources: list[str] | tuple[str, ...] = ()) -> dict[str, Any]:
-        """One selected catalog or a bounded concurrent search of connected sources."""
+        """Bounded indexed discovery; native application catalogs are excluded."""
         if selected_sources and source != 'selected':
             raise ValueError('Source selections require Choose sources.')
         if source == 'selected':
@@ -520,124 +519,7 @@ class FootageSearch:
         if source == 'web' or source in WEB_COLLECTIONS:
             return self._search_web(query, intent=intent, page=page, count=count, namespace=namespace,
                                     collection=source if source in WEB_COLLECTIONS else '')
-        from social_fetch.smart_sources import NATIVE_SITE_SOURCES, rank_smart, source_plan
-        native_sites = {NATIVE_SITE_SOURCES[site] for site in selected_sites
-                        if NATIVE_SITE_SOURCES.get(site) in self.catalogs}
-        indexed_sites = tuple(site for site in selected_sites if NATIVE_SITE_SOURCES.get(site) not in native_sites)
-        if source == 'custom' and not native_sites:
-            return self._search_web(query, intent=intent, page=page, count=count, namespace=namespace,
-                                    collection='custom', sites=selected_sites)
-        query = ' '.join(query.split())
-        if not query or len(query) > 200 or re.search(r'[\x00-\x1f\x7f]', query):
-            raise ValueError('Enter a search phrase between 1 and 200 characters.')
-        if (source not in ('all', 'smart', 'selected', 'custom', *self.catalogs) or intent not in INTENTS
-                or not 0 <= page <= 9 or not 1 <= count <= 40):
-            raise ValueError('Invalid search options.')
-        key = (namespace, source, query.casefold(), intent, page, count, selected_sites, tuple(selected_sources))
-        with self._lock:
-            cached = self._cache.get(key)
-            if cached and self.clock() - cached[0] < 300:
-                self._cache.move_to_end(key)
-                return {**cached[1], 'cached': True}
-        if not self._slots.acquire(blocking=False):
-            raise SearchBusy('Search is busy. Try again shortly.')
-        try:
-            sources = [{**row, 'mode': row.get('mode', 'native' if row['id'] in self.catalogs else 'indexed')}
-                       for row in self.status()['sources']]
-            plan = source_plan(query, intent) if source == 'smart' else None
-            wanted = set(selected_sources) if source == 'selected' else {source}
-            if plan:
-                wanted = {'custom'} if selected_sites else set(plan['sources'])
-            if source == 'all':
-                wanted = {'web', *self.catalogs}
-            if 'custom' in wanted:
-                wanted.update(native_sites)
-                if not indexed_sites:
-                    wanted.discard('custom')
-            selected = [row for row in sources if row['id'] in wanted]
-            if plan and not any(row['configured'] for row in selected) and not selected_sites:
-                selected = [row for row in sources if row['id'] == 'web' and row['configured']]
-                plan = {**plan, 'reason': 'Recommended sources are not connected; searching the web index.'}
-            available = [row for row in selected if row['configured']]
-            reports = [{'id': row['id'], 'label': row['label'], 'status': 'not_configured',
-                        'result_count': 0, 'message': 'Source connection is not configured.', 'mode': row['mode']}
-                       for row in selected if not row['configured']]
-            if not available:
-                raise SearchUnavailable('This footage source needs its server connection.')
-            batches: list[list[dict[str, Any]]] = []
-            warnings: list[str] = []
-            more, successful = False, 0
-            def lookup(row: dict[str, Any]):
-                if row['id'] == 'custom' or row['id'] in WEB_COLLECTIONS:
-                    result = self._search_web(query, intent=intent, page=page, count=count, namespace=namespace,
-                                              admitted=True, collection=row['id'],
-                                              sites=indexed_sites if row['id'] == 'custom' else ())
-                    return result['results'], result['has_more'], result['warnings']
-                if row['id'] == 'web':
-                    result = self._search_web(query, intent=intent, page=page, count=count,
-                                              namespace=namespace, admitted=True, diversify=source == 'all')
-                    return result['results'], result['has_more'], result['warnings']
-                native_query = query + ' ' + INTENTS[intent] if intent in ('official', 'gameplay') else query
-                batch = self.catalogs[row['id']].search(native_query, page, count)
-                return batch.rows, batch.more, []
-            with ThreadPoolExecutor(max_workers=min(4, len(available)), thread_name_prefix='footage-source') as pool:
-                jobs = [(row, pool.submit(lookup, row)) for row in available]
-                for row, job in jobs:
-                    try:
-                        items, has_more, notes = job.result()
-                        successful += 1
-                        batches.append(items)
-                        more = more or has_more
-                        warnings.extend(notes)
-                        reports.append({'id': row['id'], 'label': row['label'],
-                                        'mode': row['mode'],
-                                        'status': 'partial' if notes else 'ok', 'result_count': len(items),
-                                        'message': '; '.join(notes)})
-                    except Exception as exc:
-                        message = str(exc) if isinstance(exc, SearchUnavailable) else 'Search is temporarily unavailable.'
-                        warnings.append(f"{row['label']}: {message}")
-                        reports.append({'id': row['id'], 'label': row['label'], 'status': 'unavailable',
-                                        'mode': row['mode'],
-                                        'result_count': 0, 'message': message})
-            if not successful:
-                raise SearchUnavailable(warnings[0])
-            # Interleave provider ranks so a large web batch cannot hide native social_fetch.
-            unique: OrderedDict[str, dict[str, Any]] = OrderedDict()
-            for rank in zip_longest(*batches):
-                for item in rank:
-                    if item is None:
-                        continue
-                    old = unique.get(item['id'])
-                    if old:
-                        old['discovered_by'] = list(dict.fromkeys(old['discovered_by'] + item['discovered_by']))
-                        for field in ('thumbnail_url', 'duration_seconds', 'creator', 'description'):
-                            if not old.get(field) and item.get(field):
-                                old[field] = item[field]
-                        if item.get('license'):
-                            old['license'] = item['license']
-                        if item.get('media_url'):
-                            old.update({field: item[field] for field in ('media_url', 'preview', 'source', 'kind')})
-                    else:
-                        unique[item['id']] = {**item, 'discovered_by': list(item['discovered_by'])}
-            result = {'query': query, 'effective_query': query, 'intent': intent, 'page': page,
-                      'source': source, 'sources': reports, 'results': diverse_sources(list(unique.values())),
-                      'has_more': more and page < 9, 'provider': 'catalogs',
-                      'warnings': warnings, 'cached': False, 'sites': list(selected_sites)}
-            if source == 'selected':
-                result['selected_sources'] = list(selected_sources)
-            if plan:
-                result['results'] = rank_smart(list(unique.values()), query)
-                result['routing'] = {**plan, 'sources': [row['id'] for row in available],
-                                     **({'reason': 'Searching only your selected websites.'} if selected_sites else {})}
-            if not warnings:
-                with self._lock:
-                    self._cache[key] = (self.clock(), result)
-                    self._cache.move_to_end(key)
-                    while len(self._cache) > 64:
-                        self._cache.popitem(last=False)
-            return result
-        finally:
-            self._slots.release()
+        raise ValueError('Choose a supported indexed social source; native catalogs are outside this package.')
 
     def _search_web(self, query: str, *, intent: str = 'any', page: int = 0,
                     count: int = 24, namespace: str = '', admitted: bool = False,

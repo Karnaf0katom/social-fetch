@@ -1,4 +1,5 @@
 """Exercise the installed public interface outside the source checkout."""
+import ast
 import hashlib
 import importlib.util
 import json
@@ -13,6 +14,42 @@ import pytest
 from social_fetch import Client, __version__
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_every_internal_import_has_an_installed_owner():
+    import social_fetch
+    package = Path(social_fetch.__file__).parent
+    for path in package.glob('*.py'):
+        for node in ast.walk(ast.parse(path.read_text())):
+            targets = []
+            if isinstance(node, ast.ImportFrom):
+                module = (importlib.util.resolve_name('.' * node.level + (node.module or ''), 'social_fetch')
+                          if node.level else node.module or '')
+                if module.startswith('social_fetch.'):
+                    targets.append(module)
+            elif isinstance(node, ast.Import):
+                targets.extend(alias.name for alias in node.names if alias.name.startswith('social_fetch.'))
+            for target in targets:
+                assert importlib.util.find_spec(target) is not None, f'{path.name}:{node.lineno}: {target}'
+
+
+def test_default_search_factory_needs_no_private_application_catalog(monkeypatch):
+    from social_fetch.web_search import FootageSearch
+    monkeypatch.setenv('FOOTAGE_SEARCH_PROVIDER', 'public')
+    for name in ('BRAVE_SEARCH_API_KEY', 'BRAVE_API_KEY', 'SERPER_API_KEY'):
+        monkeypatch.delenv(name, raising=False)
+    search = FootageSearch.from_env()
+    assert search.index.name == 'public'
+    with pytest.raises(ValueError, match='outside'):
+        FootageSearch.from_env(include_catalogs=True)
+
+
+def test_unsupported_native_search_fails_without_a_missing_module():
+    from social_fetch.web_search import FootageSearch, PublicIndex
+    search = FootageSearch(PublicIndex())
+    for source in ('all', 'smart'):
+        with pytest.raises(ValueError, match='outside'):
+            search.search('space launch', source=source)
 
 
 def checker():

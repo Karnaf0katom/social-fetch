@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.2 alpha — 2026-10-20
+
+- Remove application-only native catalog dispatch, browser poster integration,
+  the extra Instagram bulk-download entry point and the obsolete FxTwitter adapter from
+  the standalone export. Retain the supported Client/CLI and worker routes.
+- Make the default search factory usable without private application modules;
+  unsupported native catalog modes now return an explicit error.
+- Check that every internal Python import resolves in the installed package.
+  Selected X attachment coverage remains on the active FixupX route.
+- Shorten the README, put installation and first use first, declare Git and the
+  disk-space requirement, and add focused troubleshooting and support links.
+
 ## 0.3.1 alpha — 2026-10-20
 
 - Integrate SSSTik selected-post failover, FixupX attachment-preserving embeds and

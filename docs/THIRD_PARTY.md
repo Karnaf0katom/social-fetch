@@ -24,7 +24,8 @@ external services or downloaded media.
   the selected numeric video ID on the approved CDN.
 - [FxEmbed](https://github.com/FxEmbed/FxEmbed) supplies the FixupX selected embed
   used by the X alternative. Its delivery stays on approved Twitter media hosts;
-  the earlier FxTwitter API route is retained only as historical code/evidence.
+  earlier FxTwitter API results are retained only as historical evidence. The
+  obsolete adapter is excluded from the standalone package.
 - [Reddit embeds](https://embed.reddit.com/) identify selected posts, native media
   and current comment bodies. [RapidSave](https://rapidsave.com/) supplies the
   merged video/audio delivery route; both source streams must match the selected

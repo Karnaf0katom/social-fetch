@@ -6,7 +6,7 @@ and availability can change independently of this source release.
 
 ## Current release limits
 
-Version 0.3.1 is an alpha CLI and Python library. The dated checks below record
+social-fetch is an alpha CLI and Python library. The dated checks below record
 specific public samples; they do not promise universal platform availability.
 
 - Instagram mixed carousels remain unsupported when the service does not bind
@@ -26,6 +26,19 @@ specific public samples; they do not promise universal platform availability.
 The independently operated relay servers are not included in this repository.
 The visual Footage interface, additional platforms and PyPI distribution are
 separate from this GitHub alpha release.
+
+## Standalone package cleanup — 0.3.2
+
+The standalone export omits native application catalog dispatch, private browser
+poster delivery, the unused Instagram bulk-download entry point and the obsolete FxTwitter
+adapter. The default search factory now works without private modules, and every
+internal import is checked against the installed package. Supported acquisition
+functions, worker entry points, verification and the documented Client/CLI remain.
+
+The dated 0.3.1 samples below retain their original runtime hashes. They are
+historical evidence for those snapshots. The 0.3.2 release assets contain its
+package checks, source comparison and fresh installed smoke evidence; earlier
+artifact hashes do not identify the cleaned package.
 
 ## Final launch checks — 2026-10-20
 

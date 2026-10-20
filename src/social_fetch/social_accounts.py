@@ -15,7 +15,7 @@ class AccountSearch:
         self._lock = threading.Lock()
         self._cache = OrderedDict()
 
-    def browse(self, url, search, *, count=5, namespace='', include_posters=True):
+    def browse(self, url, search, *, count=5, namespace='', include_posters=False):
         link = social_link(url)
         if not link or link.kind != 'account' or not 1 <= count <= 12:
             raise ValueError('Choose a public account link and a sample of one to twelve posts.')
@@ -67,9 +67,6 @@ class AccountSearch:
                                           'description': post.get('caption', ''), 'uploader': link.handle,
                                           'duration': post.get('source_duration_seconds')}, provider='instagram-viewer')
                         if item:
-                            if include_posters and post.get('poster_url'):
-                                from social_fetch.posters import register_account_poster
-                                item['thumbnail_url'] = register_account_poster(namespace, item['id'], post['poster_url'])
                             rows.append(item)
                     notes.append('A sample of public account videos; this is not a complete account collection.')
                     if receipt.get('page_bound_reached'):

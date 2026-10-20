@@ -22,7 +22,7 @@ HOSTS = {
     'tiktok': ('tiktok.com', 'tiktokcdn.com', 'tiktokcdn-us.com', 'tiktokcdn-eu.com',
                'tiktokv.com', 'byteoversea.com', 'ibytedtos.com', 'v19-webapp-prime.tiktok.com',
                'ssstik.io', 'tikcdn.io'),
-    'x': ('api.fxtwitter.com', 'fixupx.com', 'video.twimg.com'),
+    'x': ('fixupx.com', 'video.twimg.com'),
     'facebook': ('facebook.com', 'www.facebook.com', 'fbcdn.net'),
     'reddit': ('www.reddit.com', 'v.redd.it'),
     'pinterest': ('www.pinterest.com', 'pinimg.com'),
@@ -285,29 +285,6 @@ def fixupx_download(link, folder):
     return transfer(link, urls[0], folder)
 
 
-def x_download(link, folder):
-    post_id = link.identity.split('-video', 1)[0]
-    data = json.loads(document('x', 'https://api.fxtwitter.com/status/' + post_id))
-    tweet = data.get('tweet') or data.get('status') or {}
-    if data.get('code') != 200 or not tweet:
-        raise ProviderUnavailable('The public X fallback is unavailable')
-    if str(tweet.get('id')) != post_id:
-        raise ValueError('X fallback returned another post')
-    # Keep photo/video order for /video/N, rather than selecting N from videos only.
-    media = tweet.get('media') or {}
-    selected = re.search(r'/video/(\d+)$', link.url)
-    if selected:
-        entries = media.get('all') or []
-        index = int(selected[1]) - 1
-        if index >= len(entries) or entries[index].get('type') not in {'video', 'gif'}:
-            raise ProviderUnavailable('The selected X attachment is not a video')
-        video = entries[index]
-    else:
-        videos = media.get('videos') or []
-        if not videos:
-            raise ProviderUnavailable('The X post has no native video')
-        video = videos[0]
-    return transfer(link, video.get('url', ''), folder)
 
 
 def reddit_download(link, folder):
